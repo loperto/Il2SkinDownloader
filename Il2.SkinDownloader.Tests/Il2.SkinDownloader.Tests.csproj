@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Il2.GreatBattles\Il2.GreatBattles.csproj" />
     <ProjectReference Include="..\Il2.RemoteDrive\Il2.RemoteDrive.csproj" />
   </ItemGroup>
 

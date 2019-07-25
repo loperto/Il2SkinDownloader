@@ -78,6 +78,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Il2.GreatBattles\Il2.GreatBattles.csproj">
+      <Project>{f9fce357-2393-4457-b1c5-dcb740007de3}</Project>
+      <Name>Il2.GreatBattles</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Il2.RemoteDrive\Il2.RemoteDrive.csproj">
       <Project>{bc2998ef-412f-4e33-b000-daf3f2587332}</Project>
       <Name>Il2.RemoteDrive</Name>
