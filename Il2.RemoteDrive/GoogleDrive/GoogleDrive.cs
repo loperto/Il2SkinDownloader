@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Download;
 using Google.Apis.Drive.v3;
+using Google.Apis.Drive.v3.Data;
 using Google.Apis.Http;
+using Google.Apis.Requests;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using File = Google.Apis.Drive.v3.Data.File;
@@ -74,12 +77,13 @@ namespace Il2.RemoteDrive.GoogleDrive
             Console.WriteLine("File ID: " + file.Id);
         }
 
-        public async Task CreateFolder(string folderName)
+        public async Task CreateFolder(string folderName, string parentId = null)
         {
             var fileMetadata = new File
             {
                 Name = folderName,
-                MimeType = "application/vnd.google-apps.folder"
+                MimeType = "application/vnd.google-apps.folder",
+                Parents = !string.IsNullOrWhiteSpace(parentId) ? new List<string> { parentId } : null,
             };
             var request = service.Files.Create(fileMetadata);
             request.Fields = "id";
@@ -99,41 +103,40 @@ namespace Il2.RemoteDrive.GoogleDrive
             await updateRequest.ExecuteAsync();
         }
 
-        public async Task Download(string fileId)
+        public async Task Download(string fileId, string downloadPath)
         {
             var request = service.Files.Get(fileId);
-            var stream = new MemoryStream();
-
-            // Add a handler which will be notified on progress changes.
-            // It will notify on each chunk download and when the
-            // download is completed or failed.
-            request.MediaDownloader.ProgressChanged +=
-                progress =>
-                {
-                    switch (progress.Status)
+            using (var stream = new FileStream(downloadPath, FileMode.Create))
+            {
+                request.MediaDownloader.ProgressChanged +=
+                    progress =>
                     {
-                        case DownloadStatus.Downloading:
-                            {
-                                Console.WriteLine(progress.BytesDownloaded);
+                        switch (progress.Status)
+                        {
+                            case DownloadStatus.Downloading:
+                                {
+                                    Console.WriteLine(progress.BytesDownloaded);
+                                    break;
+                                }
+                            case DownloadStatus.Completed:
+                                {
+                                    Console.WriteLine("Download complete.");
+                                    break;
+                                }
+                            case DownloadStatus.Failed:
+                                {
+                                    Console.WriteLine("Download failed.");
+                                    break;
+                                }
+                            case DownloadStatus.NotStarted:
                                 break;
-                            }
-                        case DownloadStatus.Completed:
-                            {
-                                Console.WriteLine("Download complete.");
-                                break;
-                            }
-                        case DownloadStatus.Failed:
-                            {
-                                Console.WriteLine("Download failed.");
-                                break;
-                            }
-                        case DownloadStatus.NotStarted:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                };
-            await request.DownloadAsync(stream);
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    };
+
+                await request.DownloadAsync(stream);
+            }
         }
 
         public async Task<IReadOnlyList<GoogleDriveItem>> GetFiles(CancellationToken token)
@@ -166,6 +169,33 @@ namespace Il2.RemoteDrive.GoogleDrive
             } while (pageToken != null);
 
             return result;
+        }
+
+        public async Task Share(string itemId, string userEmail)
+        {
+            var batch = new BatchRequest(service);
+
+            var userPermission = new Permission
+            {
+                Type = "user",
+                Role = "writer",
+                EmailAddress = userEmail,
+            };
+
+            var request = service.Permissions.Create(userPermission, itemId);
+            request.Fields = "id";
+            batch.Queue(request, (BatchRequest.OnResponse<Permission>)((permission, error, index, message) =>
+            {
+                if (error != null)
+                {
+                    Console.WriteLine(error.Message);
+                }
+                else
+                {
+                    Console.WriteLine("Permission ID: " + permission.Id);
+                }
+            }));
+            await batch.ExecuteAsync();
         }
     }
 }

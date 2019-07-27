@@ -7,6 +7,7 @@ namespace Il2.GreatBattles
     public class Il2Game
     {
         private readonly string _installationPath;
+        public static string Il2FolderName = "IL-2 Sturmovik Battle of Stalingrad";
 
         public Il2Game(string installationPath)
         {
@@ -15,7 +16,10 @@ namespace Il2.GreatBattles
 
         public IEnumerable<DirectoryInfo> GetCustomSkinDirectories()
         {
-            return Directory.EnumerateDirectories(Path.Combine(_installationPath, @"data\graphics\skins")).Select(x => new DirectoryInfo(x));
+            return Directory
+                .EnumerateDirectories(Path.Combine(_installationPath, @"data\graphics\skins"))
+                .Select(x => new DirectoryInfo(x))
+                .Where(x => !x.Name.StartsWith("_"));
         }
     }
 }
