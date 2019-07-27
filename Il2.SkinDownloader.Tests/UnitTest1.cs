@@ -54,7 +54,7 @@ namespace Il2.SkinDownloader.Tests
         [Test]
         public async Task DownloadFile()
         {
-            await _drive.Download("", "C:\\Temp");
+            await _drive.Download("1Yk19hsN9lOIPXI3GQmwbto1KN1B28yeR", "C:\\Temp\\fw190-loperto.dds");
         }
 
 
