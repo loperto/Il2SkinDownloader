@@ -1,16 +1,21 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Il2.GreatBattles;
+using Il2.RemoteDrive;
 using Newtonsoft.Json;
 
 namespace Il2SkinDownloader
 {
     public partial class Form1 : Form
     {
-        private Il2Game il2 = null;
+        private Il2Game _il2;
         private const string SettingsFileName = "settings.json";
         private Configuration _configuration;
+        private GoogleDrive _googleDrive;
         public Form1()
         {
             InitializeComponent();
@@ -18,7 +23,7 @@ namespace Il2SkinDownloader
             if (!string.IsNullOrWhiteSpace(_configuration.Il2Path))
             {
                 textBox_Il2Path.Text = _configuration.Il2Path;
-                il2 = new Il2Game(_configuration.Il2Path);
+                CheckSkinUpdates();
             }
         }
 
@@ -42,6 +47,21 @@ namespace Il2SkinDownloader
             File.WriteAllText(SettingsFileName, configurationString);
         }
 
+        private void CheckSkinUpdates()
+        {
+            _il2 = new Il2Game(_configuration.Il2Path);
+            _googleDrive = new GoogleDrive("skinDownloader");
+            _googleDrive.Connect("auth.json");
+            var remoteFiles = _googleDrive.GetFiles();
+
+            var localFiles = _il2.GetCustomSkinDirectories()
+                .SelectMany(directoryInfo =>
+                    Directory.EnumerateFiles(directoryInfo.FullName).
+                        Select(file => new FileInfo(file))
+                    );
+
+        }
+
         private void Button_OpenIl2Folder_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new FolderBrowserDialog
@@ -62,8 +82,9 @@ namespace Il2SkinDownloader
                 {
                     textBox_Il2Path.Text = directoryInfo.FullName;
                     _configuration.Il2Path = directoryInfo.FullName;
-                    il2 = new Il2Game(_configuration.Il2Path);
+                    _il2 = new Il2Game(_configuration.Il2Path);
                     SaveConfiguration(_configuration);
+                    CheckSkinUpdates();
                 }
             }
         }

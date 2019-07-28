@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Il2.GreatBattles;
-using Il2.RemoteDrive.GoogleDrive;
+using Il2.RemoteDrive;
 using NUnit.Framework;
 
 namespace Il2.SkinDownloader.Tests
@@ -26,7 +26,7 @@ namespace Il2.SkinDownloader.Tests
         [Test]
         public async Task GetFiles()
         {
-            var files = await _drive.GetFiles(CancellationToken.None);
+            var files = await _drive.GetFilesAsync(CancellationToken.None);
             foreach (var googleDriveItem in files)
             {
                 Console.WriteLine(googleDriveItem);

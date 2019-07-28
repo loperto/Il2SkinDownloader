@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Il2.RemoteDrive.GoogleDrive
+namespace Il2.RemoteDrive
 {
     public class GoogleDriveItem
     {

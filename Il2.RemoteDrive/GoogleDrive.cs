@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -14,7 +13,7 @@ using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using File = Google.Apis.Drive.v3.Data.File;
 
-namespace Il2.RemoteDrive.GoogleDrive
+namespace Il2.RemoteDrive
 {
     public class GoogleDrive
     {
@@ -139,7 +138,7 @@ namespace Il2.RemoteDrive.GoogleDrive
             }
         }
 
-        public async Task<IReadOnlyList<GoogleDriveItem>> GetFiles(CancellationToken token)
+        public async Task<IReadOnlyList<GoogleDriveItem>> GetFilesAsync(CancellationToken token)
         {
             var listRequest = service.Files.List();
             listRequest.PageSize = 20;
@@ -151,6 +150,38 @@ namespace Il2.RemoteDrive.GoogleDrive
             {
                 listRequest.PageToken = pageToken;
                 var driveData = await listRequest.ExecuteAsync(token);
+                pageToken = driveData.NextPageToken;
+                var files = driveData.Files;
+                if (files == null || files.Count <= 0) continue;
+                foreach (var file in files)
+                {
+                    result.Add(new GoogleDriveItem(file.Id)
+                    {
+                        Name = file.Name,
+                        MimeType = file.MimeType,
+                        BrowserViewLink = file.WebViewLink,
+                        DownloadLink = file.WebContentLink,
+                        ModifiedTime = file.ModifiedTime,
+                        CreatedTime = file.CreatedTime,
+                    });
+                }
+            } while (pageToken != null);
+
+            return result;
+        }
+
+        public IReadOnlyList<GoogleDriveItem> GetFiles()
+        {
+            var listRequest = service.Files.List();
+            listRequest.PageSize = 20;
+            listRequest.Q = "trashed=false";
+            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime)";
+            string pageToken = null;
+            var result = new List<GoogleDriveItem>();
+            do
+            {
+                listRequest.PageToken = pageToken;
+                var driveData = listRequest.Execute();
                 pageToken = driveData.NextPageToken;
                 var files = driveData.Files;
                 if (files == null || files.Count <= 0) continue;
