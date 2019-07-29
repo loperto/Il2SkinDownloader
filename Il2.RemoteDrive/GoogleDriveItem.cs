@@ -12,6 +12,7 @@ namespace Il2.RemoteDrive
         public string BrowserViewLink { get; set; }
         public DateTime? CreatedTime { get; set; }
         public DateTime? ModifiedTime { get; set; }
+        public string Parents { get; set; }
 
         public GoogleDriveItem(string id)
         {

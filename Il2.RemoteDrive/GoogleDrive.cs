@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -102,7 +103,7 @@ namespace Il2.RemoteDrive
             await updateRequest.ExecuteAsync();
         }
 
-        public async Task Download(string fileId, string downloadPath)
+        public async Task DownloadAsync(string fileId, string downloadPath)
         {
             var request = service.Files.Get(fileId);
             using (var stream = new FileStream(downloadPath, FileMode.Create))
@@ -119,12 +120,12 @@ namespace Il2.RemoteDrive
                                 }
                             case DownloadStatus.Completed:
                                 {
-                                    Console.WriteLine("Download complete.");
+                                    Console.WriteLine("DownloadAsync complete.");
                                     break;
                                 }
                             case DownloadStatus.Failed:
                                 {
-                                    Console.WriteLine("Download failed.");
+                                    Console.WriteLine("DownloadAsync failed.");
                                     break;
                                 }
                             case DownloadStatus.NotStarted:
@@ -138,12 +139,49 @@ namespace Il2.RemoteDrive
             }
         }
 
+
+        public void Download(string fileId, string downloadPath)
+        {
+            var request = service.Files.Get(fileId);
+            using (var stream = new FileStream(downloadPath, FileMode.Create))
+            {
+                request.MediaDownloader.ProgressChanged +=
+                    progress =>
+                    {
+                        switch (progress.Status)
+                        {
+                            case DownloadStatus.Downloading:
+                            {
+                                Console.WriteLine(progress.BytesDownloaded);
+                                break;
+                            }
+                            case DownloadStatus.Completed:
+                            {
+                                Console.WriteLine("DownloadAsync complete.");
+                                break;
+                            }
+                            case DownloadStatus.Failed:
+                            {
+                                Console.WriteLine("DownloadAsync failed.");
+                                break;
+                            }
+                            case DownloadStatus.NotStarted:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    };
+
+                request.Download(stream);
+            }
+        }
+
         public async Task<IReadOnlyList<GoogleDriveItem>> GetFilesAsync(CancellationToken token)
         {
             var listRequest = service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = "trashed=false";
-            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime)";
+            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
@@ -163,6 +201,7 @@ namespace Il2.RemoteDrive
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime,
+                        Parents = string.Join(",", file.Parents),
                     });
                 }
             } while (pageToken != null);
@@ -175,7 +214,7 @@ namespace Il2.RemoteDrive
             var listRequest = service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = "trashed=false";
-            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime)";
+            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
@@ -195,6 +234,7 @@ namespace Il2.RemoteDrive
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime,
+                        Parents = string.Join(",", file.Parents),
                     });
                 }
             } while (pageToken != null);

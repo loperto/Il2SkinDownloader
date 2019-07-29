@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Il2.GreatBattles;
 using Il2.RemoteDrive;
@@ -16,14 +16,18 @@ namespace Il2SkinDownloader
         private const string SettingsFileName = "settings.json";
         private Configuration _configuration;
         private GoogleDrive _googleDrive;
+
         public Form1()
         {
             InitializeComponent();
+            buttonCheckUpdates.Enabled = false;
             _configuration = GetCurrentConfiguration();
+            backgroundWorker.WorkerReportsProgress = true;
+            backgroundWorker.WorkerSupportsCancellation = true;
             if (!string.IsNullOrWhiteSpace(_configuration.Il2Path))
             {
                 textBox_Il2Path.Text = _configuration.Il2Path;
-                CheckSkinUpdates();
+                buttonCheckUpdates.Enabled = true;
             }
         }
 
@@ -47,19 +51,19 @@ namespace Il2SkinDownloader
             File.WriteAllText(SettingsFileName, configurationString);
         }
 
-        private void CheckSkinUpdates()
+        private delegate void SafeCallDelegate(string text, int percentage);
+
+        private void WriteStatus(string text, int percentage)
         {
-            _il2 = new Il2Game(_configuration.Il2Path);
-            _googleDrive = new GoogleDrive("skinDownloader");
-            _googleDrive.Connect("auth.json");
-            var remoteFiles = _googleDrive.GetFiles();
-
-            var localFiles = _il2.GetCustomSkinDirectories()
-                .SelectMany(directoryInfo =>
-                    Directory.EnumerateFiles(directoryInfo.FullName).
-                        Select(file => new FileInfo(file))
-                    );
-
+            if (label_Status.InvokeRequired)
+            {
+                var d = new SafeCallDelegate(WriteStatus);
+                Invoke(d, text);
+            }
+            else
+            {
+                label_Status.Text = text;
+            }
         }
 
         private void Button_OpenIl2Folder_Click(object sender, EventArgs e)
@@ -77,6 +81,9 @@ namespace Il2SkinDownloader
                 if (directoryInfo.Name != Il2Game.Il2FolderName)
                 {
                     MessageBox.Show($"Selected path not valid. The folder must be {Il2Game.Il2FolderName}");
+                    textBox_Il2Path.Text = null;
+                    _configuration.Il2Path = null;
+                    buttonCheckUpdates.Enabled = false;
                 }
                 else
                 {
@@ -84,8 +91,98 @@ namespace Il2SkinDownloader
                     _configuration.Il2Path = directoryInfo.FullName;
                     _il2 = new Il2Game(_configuration.Il2Path);
                     SaveConfiguration(_configuration);
-                    CheckSkinUpdates();
+                    buttonCheckUpdates.Enabled = true;
                 }
+            }
+        }
+
+        private void ButtonCheckUpdates_Click(object sender, EventArgs e)
+        {
+            if (backgroundWorker.IsBusy != true)
+            {
+                backgroundWorker.RunWorkerAsync();
+            }
+        }
+
+        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+            _il2 = new Il2Game(_configuration.Il2Path);
+            _googleDrive = new GoogleDrive("skinDownloader");
+            _googleDrive.Connect("auth.json");
+            var remoteItems = _googleDrive.GetFiles();
+            var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
+            var remoteFolders = remoteItems.Where(x => x.IsFolder).ToArray();
+
+            foreach (var remoteFolder in remoteFolders)
+            {
+                var remoteFilesForDirectory = remoteFiles
+                    .Where(x => x.Parents == remoteFolder.Id)
+                    .ToArray();
+
+                var localFolderPath = Path.Combine(_il2.SkinDirectoryPath, remoteFolder.Name);
+
+                var currentLocalFiles = Directory.EnumerateFiles(localFolderPath)
+                    .Select(fileName => new FileInfo(fileName))
+                    .ToArray();
+
+                var toDelete = currentLocalFiles
+                    .Where(localFile => !remoteFilesForDirectory.Select(x => x.Name).Contains(localFile.Name))
+                    .ToArray();
+
+                var downloads = new List<(GoogleDriveItem remoteFile, string localPath)>();
+                foreach (var remoteFile in remoteFilesForDirectory)
+                {
+                    if (!currentLocalFiles.Any(l =>
+                        string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase) ||
+                        remoteFile.ModifiedTime > l.LastWriteTime))
+                    {
+                        var currentFilePath = Path.Combine(localFolderPath, remoteFile.Name);
+                        downloads.Add((remoteFile, currentFilePath));
+                    }
+                }
+
+                for (var i = 1; i <= downloads.Count; i++)
+                {
+                    var (remoteFile, localPath) = downloads[i - 1];
+                    var ff = (int)Math.Floor((double)i / downloads.Count * 100);
+                    worker.ReportProgress((int)ff, $"Downloading {remoteFile.Name}");
+
+                    if (File.Exists(localPath))
+                        File.Delete(localPath);
+
+                    _googleDrive.Download(remoteFile.Id, localPath);
+                }
+
+                foreach (var fileInfo in toDelete)
+                {
+                    File.Delete(fileInfo.FullName);
+                }
+            }
+        }
+
+        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            var status = e.UserState.ToString();
+            label_Status.Text = status;
+            labelPercentage.Text = $"{e.ProgressPercentage.ToString()}%";
+            progressBarSkinDownload.Increment(e.ProgressPercentage - progressBarSkinDownload.Value);
+        }
+
+        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
+                label_Status.Text = "Job Canceled!";
+            }
+            else if (e.Error != null)
+            {
+                MessageBox.Show(e.Error.ToString(), "ERROR");
+            }
+            else
+            {
+                MessageBox.Show("Update completed!");
+                Close();
             }
         }
     }

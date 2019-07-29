@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Il2.GreatBattles;
@@ -54,10 +56,20 @@ namespace Il2.SkinDownloader.Tests
         [Test]
         public async Task DownloadFile()
         {
-            await _drive.Download("1Yk19hsN9lOIPXI3GQmwbto1KN1B28yeR", "C:\\Temp\\fw190-loperto.dds");
+            await _drive.DownloadAsync("1Yk19hsN9lOIPXI3GQmwbto1KN1B28yeR", "C:\\Temp\\fw190-loperto.dds");
         }
 
-
-
+        [Test]
+        public async Task CreateFakeIl2Folder()
+        {
+            var il2FakePath = "C:\\Temp\\IL-2 Sturmovik Battle of Stalingrad";
+            var completePath = Path.Combine(il2FakePath, "data", "graphics", "skins");
+            Directory.CreateDirectory(completePath);
+            var files = await _drive.GetFilesAsync(CancellationToken.None);
+            foreach (var directory in files.Where(x => x.IsFolder))
+            {
+                Directory.CreateDirectory(Path.Combine(completePath, directory.Name));
+            }
+        }
     }
 }
