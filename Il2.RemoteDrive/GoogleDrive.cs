@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -151,20 +150,20 @@ namespace Il2.RemoteDrive
                         switch (progress.Status)
                         {
                             case DownloadStatus.Downloading:
-                            {
-                                Console.WriteLine(progress.BytesDownloaded);
-                                break;
-                            }
+                                {
+                                    Console.WriteLine(progress.BytesDownloaded);
+                                    break;
+                                }
                             case DownloadStatus.Completed:
-                            {
-                                Console.WriteLine("DownloadAsync complete.");
-                                break;
-                            }
+                                {
+                                    Console.WriteLine("DownloadAsync complete.");
+                                    break;
+                                }
                             case DownloadStatus.Failed:
-                            {
-                                Console.WriteLine("DownloadAsync failed.");
-                                break;
-                            }
+                                {
+                                    Console.WriteLine("DownloadAsync failed.");
+                                    break;
+                                }
                             case DownloadStatus.NotStarted:
                                 break;
                             default:
@@ -249,7 +248,7 @@ namespace Il2.RemoteDrive
             var userPermission = new Permission
             {
                 Type = "user",
-                Role = "writer",
+                Role = "reader",
                 EmailAddress = userEmail,
             };
 

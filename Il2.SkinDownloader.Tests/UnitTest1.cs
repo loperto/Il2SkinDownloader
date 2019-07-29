@@ -38,7 +38,7 @@ namespace Il2.SkinDownloader.Tests
         [Test]
         public async Task ShareItem()
         {
-            await _drive.Share("1XoAGf_iPTJ5zzW-mLwyoTHy-GVD2TJ0n", "gargoil98@gmail.com");
+            await _drive.Share("1XoAGf_iPTJ5zzW-mLwyoTHy-GVD2TJ0n", "guest-262@skindownloader.iam.gserviceaccount.com");
         }
 
         [Test]
