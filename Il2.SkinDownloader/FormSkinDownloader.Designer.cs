@@ -1,6 +1,6 @@
 ﻿namespace Il2SkinDownloader
 {
-    partial class Form1
+    partial class FormSkinDownloader
     {
         /// <summary>
         /// Required designer variable.
@@ -36,6 +36,7 @@
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.progressBarSkinDownload = new System.Windows.Forms.ProgressBar();
             this.labelPercentage = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // textBox_Il2Path
@@ -67,11 +68,10 @@
             // label_Status
             // 
             this.label_Status.AutoSize = true;
-            this.label_Status.Location = new System.Drawing.Point(12, 96);
+            this.label_Status.Location = new System.Drawing.Point(9, 110);
             this.label_Status.Name = "label_Status";
-            this.label_Status.Size = new System.Drawing.Size(13, 13);
+            this.label_Status.Size = new System.Drawing.Size(0, 13);
             this.label_Status.TabIndex = 3;
-            this.label_Status.Text = "_";
             // 
             // buttonCheckUpdates
             // 
@@ -91,7 +91,7 @@
             // 
             // progressBarSkinDownload
             // 
-            this.progressBarSkinDownload.Location = new System.Drawing.Point(12, 112);
+            this.progressBarSkinDownload.Location = new System.Drawing.Point(12, 84);
             this.progressBarSkinDownload.Name = "progressBarSkinDownload";
             this.progressBarSkinDownload.Size = new System.Drawing.Size(500, 23);
             this.progressBarSkinDownload.Step = 1;
@@ -105,11 +105,21 @@
             this.labelPercentage.Size = new System.Drawing.Size(0, 13);
             this.labelPercentage.TabIndex = 6;
             // 
-            // Form1
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(375, 155);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(170, 13);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Powered by =GEMINI=Hawkmoon";
+            // 
+            // FormSkinDownloader
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(550, 145);
+            this.ClientSize = new System.Drawing.Size(550, 173);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.labelPercentage);
             this.Controls.Add(this.progressBarSkinDownload);
             this.Controls.Add(this.buttonCheckUpdates);
@@ -118,7 +128,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox_Il2Path);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Name = "Form1";
+            this.Name = "FormSkinDownloader";
             this.Text = "Il2 Skin Downloader";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -135,6 +145,7 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.Windows.Forms.ProgressBar progressBarSkinDownload;
         private System.Windows.Forms.Label labelPercentage;
+        private System.Windows.Forms.Label label2;
     }
 }
 

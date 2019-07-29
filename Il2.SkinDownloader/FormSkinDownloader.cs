@@ -10,14 +10,14 @@ using Newtonsoft.Json;
 
 namespace Il2SkinDownloader
 {
-    public partial class Form1 : Form
+    public partial class FormSkinDownloader : Form
     {
         private Il2Game _il2;
         private const string SettingsFileName = "settings.json";
         private Configuration _configuration;
         private GoogleDrive _googleDrive;
 
-        public Form1()
+        public FormSkinDownloader()
         {
             InitializeComponent();
             buttonCheckUpdates.Enabled = false;
@@ -50,22 +50,6 @@ namespace Il2SkinDownloader
             var configurationString = JsonConvert.SerializeObject(configuration);
             File.WriteAllText(SettingsFileName, configurationString);
         }
-
-        private delegate void SafeCallDelegate(string text, int percentage);
-
-        private void WriteStatus(string text, int percentage)
-        {
-            if (label_Status.InvokeRequired)
-            {
-                var d = new SafeCallDelegate(WriteStatus);
-                Invoke(d, text);
-            }
-            else
-            {
-                label_Status.Text = text;
-            }
-        }
-
         private void Button_OpenIl2Folder_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new FolderBrowserDialog
@@ -108,12 +92,16 @@ namespace Il2SkinDownloader
         {
             var worker = sender as BackgroundWorker;
             _il2 = new Il2Game(_configuration.Il2Path);
+            worker.ReportProgress(1, $"Connecting to skin drive...");
             _googleDrive = new GoogleDrive("skinDownloader");
             _googleDrive.Connect("auth.json");
+
+            worker.ReportProgress(2, $"Download the skin informations...");
             var remoteItems = _googleDrive.GetFiles();
             var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
             var remoteFolders = remoteItems.Where(x => x.IsFolder).ToArray();
 
+            worker.ReportProgress(3, $"Checking skins to update...");
             foreach (var remoteFolder in remoteFolders)
             {
                 var remoteFilesForDirectory = remoteFiles
@@ -158,6 +146,8 @@ namespace Il2SkinDownloader
                 {
                     File.Delete(fileInfo.FullName);
                 }
+
+                worker.ReportProgress(100, $"Job completed");
             }
         }
 
@@ -181,7 +171,7 @@ namespace Il2SkinDownloader
             }
             else
             {
-                MessageBox.Show("Update completed!");
+                MessageBox.Show("Job completed!");
                 Close();
             }
         }
