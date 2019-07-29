@@ -55,16 +55,16 @@ namespace Il2SkinDownloader
             var openFolderDialog = new FolderBrowserDialog
             {
                 ShowNewFolderButton = false,
-                Description = $"Select the {Il2Game.Il2FolderName} folder path",
+                Description = $"Select the Il2 folder path",
             };
 
             var result = openFolderDialog.ShowDialog();
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(openFolderDialog.SelectedPath))
             {
                 var directoryInfo = new DirectoryInfo(openFolderDialog.SelectedPath);
-                if (directoryInfo.Name != Il2Game.Il2FolderName)
+                if (!Il2Game.Il2FolderNames.Contains(directoryInfo.Name))
                 {
-                    MessageBox.Show($"Selected path not valid. The folder must be {Il2Game.Il2FolderName}");
+                    MessageBox.Show($"Selected path not valid. The folder must be a valid il2 installation path");
                     textBox_Il2Path.Text = null;
                     _configuration.Il2Path = null;
                     buttonCheckUpdates.Enabled = false;
@@ -94,13 +94,14 @@ namespace Il2SkinDownloader
             _il2 = new Il2Game(_configuration.Il2Path);
             worker.ReportProgress(1, $"Connecting to skin drive...");
             _googleDrive = new GoogleDrive("skinDownloader");
-            _googleDrive.Connect("auth.json");
+            _googleDrive.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
 
             worker.ReportProgress(2, $"Download the skin informations...");
             var remoteItems = _googleDrive.GetFiles();
             var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
-            var remoteFolders = remoteItems.Where(x => x.IsFolder).ToArray();
 
+            var localPlanesFolder = _il2.GetCustomSkinDirectories().Select(x => x.Name);
+            var remoteFolders = remoteItems.Where(x => x.IsFolder && localPlanesFolder.Contains(x.Name)).ToArray();
             worker.ReportProgress(3, $"Checking skins to update...");
             foreach (var remoteFolder in remoteFolders)
             {
