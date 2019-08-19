@@ -92,17 +92,19 @@ namespace Il2SkinDownloader
         {
             var worker = sender as BackgroundWorker;
             _il2 = new Il2Game(_configuration.Il2Path);
-            worker.ReportProgress(1, $"Connecting to skin drive...");
+            worker.ReportProgress(0, $"Connecting to skin drive...");
             _googleDrive = new GoogleDrive("skinDownloader");
             _googleDrive.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
 
-            worker.ReportProgress(2, $"Download the skin informations...");
+            worker.ReportProgress(0, $"Download the skin informations...");
             var remoteItems = _googleDrive.GetFiles();
             var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
 
             var localPlanesFolder = _il2.GetCustomSkinDirectories().Select(x => x.Name);
             var remoteFolders = remoteItems.Where(x => x.IsFolder && localPlanesFolder.Contains(x.Name)).ToArray();
-            worker.ReportProgress(3, $"Checking skins to update...");
+            worker.ReportProgress(0, $"Checking skins to update...");
+            var downloads = new List<(GoogleDriveItem remoteFile, string localPath)>();
+            var toDelete = new List<FileInfo>();
             foreach (var remoteFolder in remoteFolders)
             {
                 var remoteFilesForDirectory = remoteFiles
@@ -115,41 +117,41 @@ namespace Il2SkinDownloader
                     .Select(fileName => new FileInfo(fileName))
                     .ToArray();
 
-                var toDelete = currentLocalFiles
-                    .Where(localFile => !remoteFilesForDirectory.Select(x => x.Name).Contains(localFile.Name))
-                    .ToArray();
+                var del = currentLocalFiles
+                   .Where(localFile => !remoteFilesForDirectory.Select(x => x.Name).Contains(localFile.Name))
+                   .ToArray();
 
-                var downloads = new List<(GoogleDriveItem remoteFile, string localPath)>();
+                toDelete.AddRange(del);
+
                 foreach (var remoteFile in remoteFilesForDirectory)
                 {
-                    if (!currentLocalFiles.Any(l =>
-                        string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase) ||
-                        remoteFile.ModifiedTime > l.LastWriteTime))
+                    var existingFile = currentLocalFiles.FirstOrDefault(l => string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase));
+                    if (existingFile == null || remoteFile.ModifiedTime > existingFile.LastWriteTime)
                     {
                         var currentFilePath = Path.Combine(localFolderPath, remoteFile.Name);
                         downloads.Add((remoteFile, currentFilePath));
                     }
                 }
-
-                for (var i = 1; i <= downloads.Count; i++)
-                {
-                    var (remoteFile, localPath) = downloads[i - 1];
-                    var ff = (int)Math.Floor((double)i / downloads.Count * 100);
-                    worker.ReportProgress((int)ff, $"Downloading {remoteFile.Name}");
-
-                    if (File.Exists(localPath))
-                        File.Delete(localPath);
-
-                    _googleDrive.Download(remoteFile.Id, localPath);
-                }
-
-                foreach (var fileInfo in toDelete)
-                {
-                    File.Delete(fileInfo.FullName);
-                }
-
-                worker.ReportProgress(100, $"Job completed");
             }
+
+            for (var i = 1; i <= downloads.Count; i++)
+            {
+                var (remoteFile, localPath) = downloads[i - 1];
+                var ff = (int)Math.Floor((double)i / downloads.Count * 100);
+                worker.ReportProgress((int)ff, $"Downloading {remoteFile.Name}");
+
+                if (File.Exists(localPath))
+                    File.Delete(localPath);
+
+                _googleDrive.Download(remoteFile.Id, localPath);
+            }
+
+            foreach (var fileInfo in toDelete)
+            {
+                File.Delete(fileInfo.FullName);
+            }
+
+            worker.ReportProgress(100, $"Job completed");
         }
 
         private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
