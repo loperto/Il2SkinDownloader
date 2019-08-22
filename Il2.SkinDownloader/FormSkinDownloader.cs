@@ -13,7 +13,7 @@ namespace Il2SkinDownloader
     public partial class FormSkinDownloader : Form
     {
         private Il2Game _il2;
-        private const string SettingsFileName = "settings.json";
+        private string SettingsFileName => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
         private Configuration _configuration;
         private GoogleDrive _googleDrive;
 
