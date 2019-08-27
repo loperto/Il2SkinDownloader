@@ -13,7 +13,9 @@ namespace Il2SkinDownloader
     public partial class FormSkinDownloader : Form
     {
         private Il2Game _il2;
-        private string SettingsFileName => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+
+        private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
+        private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
         private GoogleDrive _googleDrive;
 
@@ -48,6 +50,10 @@ namespace Il2SkinDownloader
         {
             if (configuration == null) return;
             var configurationString = JsonConvert.SerializeObject(configuration);
+
+            if (!Directory.Exists(_folderSettingsPath))
+                Directory.CreateDirectory(_folderSettingsPath);
+
             File.WriteAllText(SettingsFileName, configurationString);
         }
         private void Button_OpenIl2Folder_Click(object sender, EventArgs e)
