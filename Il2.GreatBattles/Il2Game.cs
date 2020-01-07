@@ -13,6 +13,7 @@ namespace Il2.GreatBattles
             "IL-2 Sturmovik Battle of Moscow",
             "IL-2 Sturmovik Battle of Kuban",
             "IL-2 Sturmovik Battle of Bodenplatte",
+            "IL-2 Great Battles",
         };
 
         public Il2Game(string installationPath)
