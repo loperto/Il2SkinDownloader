@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -200,7 +201,7 @@ namespace Il2.RemoteDrive
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime,
-                        Parents = string.Join(",", file.Parents),
+                        Parents = file.Parents != null ? string.Join(",", file.Parents) : string.Empty,
                     });
                 }
             } while (pageToken != null);
@@ -233,7 +234,7 @@ namespace Il2.RemoteDrive
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime,
-                        Parents = string.Join(",", file.Parents),
+                        Parents = file.Parents != null ? string.Join(",", file.Parents) : string.Empty,
                     });
                 }
             } while (pageToken != null);
