@@ -13,7 +13,6 @@ namespace Il2SkinDownloader
     public partial class FormSkinDownloader : Form
     {
         private Il2Game _il2;
-
         private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
@@ -184,10 +183,5 @@ namespace Il2SkinDownloader
                 Close();
             }
         }
-    }
-
-    public class Configuration
-    {
-        public string Il2Path { get; set; }
     }
 }
