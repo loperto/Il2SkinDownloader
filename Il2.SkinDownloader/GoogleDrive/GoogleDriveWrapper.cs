@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -14,18 +13,18 @@ using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using File = Google.Apis.Drive.v3.Data.File;
 
-namespace Il2.RemoteDrive
+namespace Il2SkinDownloader.GoogleDrive
 {
-    public class GoogleDrive
+    public class GoogleDriveWrapper
     {
-        private readonly string appName;
-        private DriveService service;
+        private readonly string _appName;
+        private DriveService _service;
         private IEnumerable<string> Scopes { get; } = new List<string> { DriveService.Scope.Drive };
 
 
-        public GoogleDrive(string appName)
+        public GoogleDriveWrapper(string appName)
         {
-            this.appName = appName;
+            this._appName = appName;
         }
 
         public void Connect(string jsonPath)
@@ -41,17 +40,17 @@ namespace Il2.RemoteDrive
             {
                 ClientId = idClient,
                 ClientSecret = secret
-            }, Scopes, appName, cancellationToken, new FileDataStore("credentials.json"));
+            }, Scopes, _appName, cancellationToken, new FileDataStore("credentials.json"));
 
             CreateDrive(credentials);
         }
 
         private void CreateDrive(IConfigurableHttpClientInitializer credentials)
         {
-            service = new DriveService(new BaseClientService.Initializer
+            _service = new DriveService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credentials,
-                ApplicationName = appName,
+                ApplicationName = _appName,
             });
         }
 
@@ -69,7 +68,7 @@ namespace Il2.RemoteDrive
             FilesResource.CreateMediaUpload uploadRequest;
             using (var stream = new FileStream(fileInfo.FullName, FileMode.Open))
             {
-                uploadRequest = service.Files.Create(fileMetadata, stream, MimeTypeMap.GetMimeType(fileInfo.Extension));
+                uploadRequest = _service.Files.Create(fileMetadata, stream, MimeTypeMap.GetMimeType(fileInfo.Extension));
                 uploadRequest.Fields = "id";
                 await uploadRequest.UploadAsync();
             }
@@ -85,18 +84,18 @@ namespace Il2.RemoteDrive
                 MimeType = "application/vnd.google-apps.folder",
                 Parents = !string.IsNullOrWhiteSpace(parentId) ? new List<string> { parentId } : null,
             };
-            var request = service.Files.Create(fileMetadata);
+            var request = _service.Files.Create(fileMetadata);
             request.Fields = "id";
             await request.ExecuteAsync();
         }
 
         public async Task MoveFile(string fileId, string folderId)
         {
-            var getRequest = service.Files.Get(fileId);
+            var getRequest = _service.Files.Get(fileId);
             getRequest.Fields = "parents";
             var file = getRequest.Execute();
             var previousParents = string.Join(",", file.Parents);
-            var updateRequest = service.Files.Update(new File(), fileId);
+            var updateRequest = _service.Files.Update(new File(), fileId);
             updateRequest.Fields = "id, parents";
             updateRequest.AddParents = folderId;
             updateRequest.RemoveParents = previousParents;
@@ -105,7 +104,7 @@ namespace Il2.RemoteDrive
 
         public async Task DownloadAsync(string fileId, string downloadPath)
         {
-            var request = service.Files.Get(fileId);
+            var request = _service.Files.Get(fileId);
             using (var stream = new FileStream(downloadPath, FileMode.Create))
             {
                 request.MediaDownloader.ProgressChanged +=
@@ -142,7 +141,7 @@ namespace Il2.RemoteDrive
 
         public void Download(string fileId, string downloadPath)
         {
-            var request = service.Files.Get(fileId);
+            var request = _service.Files.Get(fileId);
             using (var stream = new FileStream(downloadPath, FileMode.Create))
             {
                 request.MediaDownloader.ProgressChanged +=
@@ -178,7 +177,7 @@ namespace Il2.RemoteDrive
 
         public async Task<IReadOnlyList<GoogleDriveItem>> GetFilesAsync(CancellationToken token)
         {
-            var listRequest = service.Files.List();
+            var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = "trashed=false";
             listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
@@ -211,7 +210,7 @@ namespace Il2.RemoteDrive
 
         public IReadOnlyList<GoogleDriveItem> GetFiles()
         {
-            var listRequest = service.Files.List();
+            var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = "trashed=false";
             listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
@@ -244,7 +243,7 @@ namespace Il2.RemoteDrive
 
         public async Task Share(string itemId, string userEmail)
         {
-            var batch = new BatchRequest(service);
+            var batch = new BatchRequest(_service);
 
             var userPermission = new Permission
             {
@@ -253,7 +252,7 @@ namespace Il2.RemoteDrive
                 EmailAddress = userEmail,
             };
 
-            var request = service.Permissions.Create(userPermission, itemId);
+            var request = _service.Permissions.Create(userPermission, itemId);
             request.Fields = "id";
             batch.Queue(request, (BatchRequest.OnResponse<Permission>)((permission, error, index, message) =>
             {

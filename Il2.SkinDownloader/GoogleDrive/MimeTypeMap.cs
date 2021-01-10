@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Il2.RemoteDrive
+namespace Il2SkinDownloader.GoogleDrive
 {
     public static class MimeTypeMap
     {

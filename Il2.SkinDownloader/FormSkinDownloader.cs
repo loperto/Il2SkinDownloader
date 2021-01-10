@@ -4,8 +4,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using Il2.GreatBattles;
-using Il2.RemoteDrive;
+using Il2SkinDownloader.GoogleDrive;
+using Il2SkinDownloader.IL2;
+using Mandrega.Common;
 using Newtonsoft.Json;
 
 namespace Il2SkinDownloader
@@ -16,7 +17,7 @@ namespace Il2SkinDownloader
         private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
-        private GoogleDrive _googleDrive;
+        private GoogleDriveWrapper _googleDriveWrapper;
 
         public FormSkinDownloader()
         {
@@ -95,14 +96,19 @@ namespace Il2SkinDownloader
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+
             var worker = sender as BackgroundWorker;
             _il2 = new Il2Game(_configuration.Il2Path);
             worker.ReportProgress(0, $"Connecting to skin drive...");
-            _googleDrive = new GoogleDrive("skinDownloader");
-            _googleDrive.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
+            _googleDriveWrapper = new GoogleDriveWrapper("skinDownloader");
+            _googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
 
             worker.ReportProgress(0, $"Download the skin informations...");
-            var remoteItems = _googleDrive.GetFiles();
+            
+            //var configuration = StaticConfiguration.GetCurrentConfiguration();
+            //Installer.Install(configuration);
+            
+            var remoteItems = _googleDriveWrapper.GetFiles();
             var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
 
             var localPlanesFolder = _il2.GetCustomSkinDirectories().Select(x => x.Name);
@@ -148,7 +154,7 @@ namespace Il2SkinDownloader
                 if (File.Exists(localPath))
                     File.Delete(localPath);
 
-                _googleDrive.Download(remoteFile.Id, localPath);
+                _googleDriveWrapper.Download(remoteFile.Id, localPath);
             }
 
             foreach (var fileInfo in toDelete)
@@ -182,6 +188,11 @@ namespace Il2SkinDownloader
                 MessageBox.Show("Job completed!");
                 Close();
             }
+        }
+
+        private void FormSkinDownloader_Load(object sender, EventArgs e)
+        {
+    
         }
     }
 }

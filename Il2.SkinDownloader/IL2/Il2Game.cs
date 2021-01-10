@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace Il2.GreatBattles
+namespace Il2SkinDownloader.IL2
 {
     public class Il2Game
     {
@@ -13,7 +13,7 @@ namespace Il2.GreatBattles
             "IL-2 Sturmovik Battle of Moscow",
             "IL-2 Sturmovik Battle of Kuban",
             "IL-2 Sturmovik Battle of Bodenplatte",
-            "IL-2 Great Battles",
+            "IL-2 Sturmovik Great Battles",
         };
 
         public Il2Game(string installationPath)

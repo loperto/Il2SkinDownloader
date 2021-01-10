@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Il2.RemoteDrive
+namespace Il2SkinDownloader.GoogleDrive
 {
     public class GoogleDriveItem
     {
