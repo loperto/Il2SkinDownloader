@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
-using Il2SkinDownloader.GoogleDrive;
-using Il2SkinDownloader.IL2;
-using Mandrega.Common;
+using IL2SkinDownloader.Core.GoogleDrive;
+using IL2SkinDownloader.Core.IL2;
 using Newtonsoft.Json;
 
 namespace Il2SkinDownloader
 {
     public partial class FormSkinDownloader : Form
     {
-        private Il2Game _il2;
         private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
@@ -68,7 +67,7 @@ namespace Il2SkinDownloader
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(openFolderDialog.SelectedPath))
             {
                 var directoryInfo = new DirectoryInfo(openFolderDialog.SelectedPath);
-                if (!Il2Game.Il2FolderNames.Contains(directoryInfo.Name))
+                if (!IL2Helpers.Il2FolderNames.Contains(directoryInfo.Name))
                 {
                     MessageBox.Show($"Selected path not valid. The folder must be a valid il2 installation path");
                     textBox_Il2Path.Text = null;
@@ -79,7 +78,6 @@ namespace Il2SkinDownloader
                 {
                     textBox_Il2Path.Text = directoryInfo.FullName;
                     _configuration.Il2Path = directoryInfo.FullName;
-                    _il2 = new Il2Game(_configuration.Il2Path);
                     SaveConfiguration(_configuration);
                     buttonCheckUpdates.Enabled = true;
                 }
@@ -98,22 +96,21 @@ namespace Il2SkinDownloader
         {
 
             var worker = sender as BackgroundWorker;
-            _il2 = new Il2Game(_configuration.Il2Path);
             worker.ReportProgress(0, $"Connecting to skin drive...");
             _googleDriveWrapper = new GoogleDriveWrapper("skinDownloader");
             _googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
 
             worker.ReportProgress(0, $"Download the skin informations...");
-            
+
             //var configuration = StaticConfiguration.GetCurrentConfiguration();
             //Installer.Install(configuration);
-            
-            var remoteItems = _googleDriveWrapper.GetFiles();
-            var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
 
-            var localPlanesFolder = _il2.GetCustomSkinDirectories().Select(x => x.Name);
+            var remoteItems = _googleDriveWrapper.GetFilesAsync(CancellationToken.None).Result;
+            var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
+            var localPlanesFolder = IL2Helpers.GetCustomSkinDirectories(_configuration.Il2Path).Select(x => x.Name);
             var remoteFolders = remoteItems.Where(x => x.IsFolder && localPlanesFolder.Contains(x.Name)).ToArray();
             worker.ReportProgress(0, $"Checking skins to update...");
+            
             var downloads = new List<(GoogleDriveItem remoteFile, string localPath)>();
             var toDelete = new List<FileInfo>();
             foreach (var remoteFolder in remoteFolders)
@@ -122,7 +119,7 @@ namespace Il2SkinDownloader
                     .Where(x => x.Parents == remoteFolder.Id)
                     .ToArray();
 
-                var localFolderPath = Path.Combine(_il2.SkinDirectoryPath, remoteFolder.Name);
+                var localFolderPath = Path.Combine(IL2Helpers.SkinDirectoryPath(_configuration.Il2Path), remoteFolder.Name);
 
                 var currentLocalFiles = Directory.EnumerateFiles(localFolderPath)
                     .Select(fileName => new FileInfo(fileName))
@@ -154,7 +151,7 @@ namespace Il2SkinDownloader
                 if (File.Exists(localPath))
                     File.Delete(localPath);
 
-                _googleDriveWrapper.Download(remoteFile.Id, localPath);
+                _googleDriveWrapper.DownloadAsync(remoteFile.Id, localPath).Wait();
             }
 
             foreach (var fileInfo in toDelete)
@@ -192,7 +189,7 @@ namespace Il2SkinDownloader
 
         private void FormSkinDownloader_Load(object sender, EventArgs e)
         {
-    
+
         }
     }
 }

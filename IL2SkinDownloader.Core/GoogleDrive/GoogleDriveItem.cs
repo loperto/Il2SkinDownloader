@@ -1,7 +1,12 @@
 ﻿using System;
 
-namespace Il2SkinDownloader.GoogleDrive
+namespace IL2SkinDownloader.Core.GoogleDrive
 {
+    public class GoogleDriveDirectory
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+    }
     public class GoogleDriveItem
     {
         public string Id { get; set; }
@@ -10,7 +15,7 @@ namespace Il2SkinDownloader.GoogleDrive
         public string MimeType { get; set; }
         public string DownloadLink { get; set; }
         public string BrowserViewLink { get; set; }
-        public DateTime? CreatedTime { get; set; }
+        public DateTime CreatedTime { get; set; }
         public DateTime? ModifiedTime { get; set; }
         public string Parents { get; set; }
 

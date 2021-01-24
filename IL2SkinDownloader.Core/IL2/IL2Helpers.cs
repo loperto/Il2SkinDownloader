@@ -2,12 +2,11 @@
 using System.IO;
 using System.Linq;
 
-namespace Il2SkinDownloader.IL2
+namespace IL2SkinDownloader.Core.IL2
 {
-    public class Il2Game
+    public static class IL2Helpers
     {
-        private readonly string _installationPath;
-        public string SkinDirectoryPath => Path.Combine(_installationPath, "data", "graphics", "skins");
+        public static string SkinDirectoryPath(string installPath) => Path.Combine(installPath, "data", "graphics", "skins");
         public static List<string> Il2FolderNames = new List<string> {
             "IL-2 Sturmovik Battle of Stalingrad",
             "IL-2 Sturmovik Battle of Moscow",
@@ -15,15 +14,10 @@ namespace Il2SkinDownloader.IL2
             "IL-2 Sturmovik Battle of Bodenplatte",
             "IL-2 Sturmovik Great Battles",
         };
-
-        public Il2Game(string installationPath)
-        {
-            _installationPath = installationPath;
-        }
-        public IEnumerable<DirectoryInfo> GetCustomSkinDirectories()
+        public static IEnumerable<DirectoryInfo> GetCustomSkinDirectories(string il2InstallPath)
         {
             return Directory
-                .EnumerateDirectories(SkinDirectoryPath)
+                .EnumerateDirectories(SkinDirectoryPath(il2InstallPath))
                 .Select(x => new DirectoryInfo(x))
                 .Where(x => !x.Name.StartsWith("_"));
         }

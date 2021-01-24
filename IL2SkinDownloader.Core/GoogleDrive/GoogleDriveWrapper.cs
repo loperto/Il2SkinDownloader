@@ -13,15 +13,13 @@ using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using File = Google.Apis.Drive.v3.Data.File;
 
-namespace Il2SkinDownloader.GoogleDrive
+namespace IL2SkinDownloader.Core.GoogleDrive
 {
     public class GoogleDriveWrapper
     {
         private readonly string _appName;
         private DriveService _service;
         private IEnumerable<string> Scopes { get; } = new List<string> { DriveService.Scope.Drive };
-
-
         public GoogleDriveWrapper(string appName)
         {
             this._appName = appName;
@@ -54,7 +52,7 @@ namespace Il2SkinDownloader.GoogleDrive
             });
         }
 
-        public async Task Upload(string filePath, string folderId = null)
+        public async Task UploadAsync(string filePath, string folderId = null)
         {
             var fileInfo = new FileInfo(filePath);
             var fileMetadata = new File
@@ -76,7 +74,7 @@ namespace Il2SkinDownloader.GoogleDrive
             Console.WriteLine("File ID: " + file.Id);
         }
 
-        public async Task CreateFolder(string folderName, string parentId = null)
+        public async Task CreateFolderAsync(string folderName, string parentId = null)
         {
             var fileMetadata = new File
             {
@@ -89,7 +87,7 @@ namespace Il2SkinDownloader.GoogleDrive
             await request.ExecuteAsync();
         }
 
-        public async Task MoveFile(string fileId, string folderId)
+        public async Task MoveFileAsync(string fileId, string folderId)
         {
             var getRequest = _service.Files.Get(fileId);
             getRequest.Fields = "parents";
@@ -138,48 +136,11 @@ namespace Il2SkinDownloader.GoogleDrive
             }
         }
 
-
-        public void Download(string fileId, string downloadPath)
-        {
-            var request = _service.Files.Get(fileId);
-            using (var stream = new FileStream(downloadPath, FileMode.Create))
-            {
-                request.MediaDownloader.ProgressChanged +=
-                    progress =>
-                    {
-                        switch (progress.Status)
-                        {
-                            case DownloadStatus.Downloading:
-                                {
-                                    Console.WriteLine(progress.BytesDownloaded);
-                                    break;
-                                }
-                            case DownloadStatus.Completed:
-                                {
-                                    Console.WriteLine("DownloadAsync complete.");
-                                    break;
-                                }
-                            case DownloadStatus.Failed:
-                                {
-                                    Console.WriteLine("DownloadAsync failed.");
-                                    break;
-                                }
-                            case DownloadStatus.NotStarted:
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                    };
-
-                request.Download(stream);
-            }
-        }
-
         public async Task<IReadOnlyList<GoogleDriveItem>> GetFilesAsync(CancellationToken token)
         {
             var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
-            listRequest.Q = "trashed=false";
+            listRequest.Q = "trashed=false and mimeType != 'application/vnd.google-apps.folder'";
             listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
@@ -199,7 +160,7 @@ namespace Il2SkinDownloader.GoogleDrive
                         BrowserViewLink = file.WebViewLink,
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
-                        CreatedTime = file.CreatedTime,
+                        CreatedTime = file.CreatedTime.Value,
                         Parents = file.Parents != null ? string.Join(",", file.Parents) : string.Empty,
                     });
                 }
@@ -208,18 +169,18 @@ namespace Il2SkinDownloader.GoogleDrive
             return result;
         }
 
-        public IReadOnlyList<GoogleDriveItem> GetFiles()
+        public async Task<IReadOnlyList<GoogleDriveItem>> GetFilesInDirectoryAsync(string directory, CancellationToken token)
         {
             var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
-            listRequest.Q = "trashed=false";
+            listRequest.Q = $"trashed=false and mimeType != 'application/vnd.google-apps.folder' and '{directory}' in parents";
             listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
             {
                 listRequest.PageToken = pageToken;
-                var driveData = listRequest.Execute();
+                var driveData = await listRequest.ExecuteAsync(token);
                 pageToken = driveData.NextPageToken;
                 var files = driveData.Files;
                 if (files == null || files.Count <= 0) continue;
@@ -232,7 +193,7 @@ namespace Il2SkinDownloader.GoogleDrive
                         BrowserViewLink = file.WebViewLink,
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
-                        CreatedTime = file.CreatedTime,
+                        CreatedTime = file.CreatedTime.Value,
                         Parents = file.Parents != null ? string.Join(",", file.Parents) : string.Empty,
                     });
                 }
@@ -241,7 +202,35 @@ namespace Il2SkinDownloader.GoogleDrive
             return result;
         }
 
-        public async Task Share(string itemId, string userEmail)
+        public async Task<IReadOnlyList<GoogleDriveDirectory>> GetFoldersAsync()
+        {
+            var listRequest = _service.Files.List();
+            listRequest.PageSize = 20;
+            listRequest.Q = "trashed=false and mimeType = 'application/vnd.google-apps.folder'";
+            listRequest.Fields = "nextPageToken, files(id, name)";
+            string pageToken = null;
+            var result = new List<GoogleDriveDirectory>();
+            do
+            {
+                listRequest.PageToken = pageToken;
+                var driveData = await listRequest.ExecuteAsync();
+                pageToken = driveData.NextPageToken;
+                var files = driveData.Files;
+                if (files == null || files.Count <= 0) continue;
+                foreach (var file in files)
+                {
+                    result.Add(new GoogleDriveDirectory
+                    {
+                        Id = file.Id,
+                        Name = file.Name,
+                    });
+                }
+            } while (pageToken != null);
+
+            return result;
+        }
+        
+        public async Task ShareAsync(string itemId, string userEmail)
         {
             var batch = new BatchRequest(_service);
 

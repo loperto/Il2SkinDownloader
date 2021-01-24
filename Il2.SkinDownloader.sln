@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2.SkinDownloader", "Il2.S
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{2EDF95A7-0DF1-45E8-BE30-8663538E0D06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IL2SkinDownloader.Tests", "IL2SkinDownloader.Tests\IL2SkinDownloader.Tests.csproj", "{A191F1B8-5A85-4136-9F59-7C3583F193EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IL2SkinDownloader.Core", "IL2SkinDownloader.Core\IL2SkinDownloader.Core.csproj", "{0079E43E-5044-407F-A870-2852A758D66B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{2EDF95A7-0DF1-45E8-BE30-8663538E0D06}.Debug|Any CPU.Build.0 = Debug
 		{2EDF95A7-0DF1-45E8-BE30-8663538E0D06}.Release|Any CPU.ActiveCfg = Release
 		{2EDF95A7-0DF1-45E8-BE30-8663538E0D06}.Release|Any CPU.Build.0 = Release
+		{A191F1B8-5A85-4136-9F59-7C3583F193EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A191F1B8-5A85-4136-9F59-7C3583F193EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A191F1B8-5A85-4136-9F59-7C3583F193EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A191F1B8-5A85-4136-9F59-7C3583F193EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0079E43E-5044-407F-A870-2852A758D66B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0079E43E-5044-407F-A870-2852A758D66B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0079E43E-5044-407F-A870-2852A758D66B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0079E43E-5044-407F-A870-2852A758D66B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
