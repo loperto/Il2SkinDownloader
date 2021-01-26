@@ -26,10 +26,12 @@ namespace IL2SkinDownloader.Tests
         }
 
         [Test]
-        public void TestDiff()
+        public async Task TestDiff()
         {
-            var diff = new Test(@"G:\Steam\steamapps\common\IL-2 Sturmovik Battle of Stalingrad");
-            var result = diff.GetDiff();
+            var googleDriveSkinDrive = new GoogleDriveSkinDrive();
+            var diffManager = new DiffManager(googleDriveSkinDrive, "C:\\Temp\\IL-2 Sturmovik Great Battles");
+            var diffs = await diffManager.GetDiffAsync();
+            await diffManager.ExecuteDiff(diffs);
         }
     }
 }
