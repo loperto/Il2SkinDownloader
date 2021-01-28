@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using IL2SkinDownloader.Core;
 using IL2SkinDownloader.Core.GoogleDrive;
 using IL2SkinDownloader.Core.IL2;
 using Newtonsoft.Json;
@@ -16,7 +18,7 @@ namespace Il2SkinDownloader
         private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
-        private GoogleDriveWrapper _googleDriveWrapper;
+        private DiffManager _diffManager;
 
         public FormSkinDownloader()
         {
@@ -25,6 +27,13 @@ namespace Il2SkinDownloader
             _configuration = GetCurrentConfiguration();
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.WorkerSupportsCancellation = true;
+            listViewDiffs.Columns.AddRange(new[]
+            {
+                new ColumnHeader {Name = "Plane",Text = "Plane"},
+                new ColumnHeader {Name = "Status",Text = "Plane"},
+
+            });
+            listViewDiffs.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
             if (!string.IsNullOrWhiteSpace(_configuration.Il2Path))
             {
                 textBox_Il2Path.Text = _configuration.Il2Path;
@@ -84,12 +93,28 @@ namespace Il2SkinDownloader
             }
         }
 
-        private void ButtonCheckUpdates_Click(object sender, EventArgs e)
+        private async void ButtonCheckUpdates_Click(object sender, EventArgs e)
         {
-            if (backgroundWorker.IsBusy != true)
+            if (_diffManager == null)
+                _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
+
+            label_Status.Text = "Check updates";
+            var diffs = await _diffManager.GetDiffAsync();
+            var items = diffs.Select(d =>
             {
-                backgroundWorker.RunWorkerAsync();
-            }
+                var status = d.GetStatus();
+                var item = new ListViewItem(d.Remote.Name);
+                item.SubItems.Add(status.ToString());
+                return item;
+            }).ToArray();
+            listViewDiffs.Items.AddRange(items);
+
+            //await _diffManager.ExecuteDiff(diff);
+
+            //if (backgroundWorker.IsBusy != true)
+            //{
+            //    backgroundWorker.RunWorkerAsync();
+            //}
         }
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -97,26 +122,28 @@ namespace Il2SkinDownloader
 
             var worker = sender as BackgroundWorker;
             worker.ReportProgress(0, $"Connecting to skin drive...");
-            _googleDriveWrapper = new GoogleDriveWrapper("skinDownloader");
-            _googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
+
+
+            var googleDriveWrapper = new GoogleDriveWrapper();
+            googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"), "skinDownloader");
 
             worker.ReportProgress(0, $"Download the skin informations...");
 
             //var configuration = StaticConfiguration.GetCurrentConfiguration();
             //Installer.Install(configuration);
 
-            var remoteItems = _googleDriveWrapper.GetFilesAsync(CancellationToken.None).Result;
+            var remoteItems = googleDriveWrapper.GetFilesAsync(CancellationToken.None).Result;
             var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
             var localPlanesFolder = IL2Helpers.GetCustomSkinDirectories(_configuration.Il2Path).Select(x => x.Name);
             var remoteFolders = remoteItems.Where(x => x.IsFolder && localPlanesFolder.Contains(x.Name)).ToArray();
             worker.ReportProgress(0, $"Checking skins to update...");
-            
+
             var downloads = new List<(GoogleDriveItem remoteFile, string localPath)>();
             var toDelete = new List<FileInfo>();
             foreach (var remoteFolder in remoteFolders)
             {
                 var remoteFilesForDirectory = remoteFiles
-                    .Where(x => x.Parents == remoteFolder.Id)
+                    .Where(x => x.Parents?.Contains(remoteFolder.Id, StringComparer.InvariantCultureIgnoreCase) ?? false)
                     .ToArray();
 
                 var localFolderPath = Path.Combine(IL2Helpers.SkinDirectoryPath(_configuration.Il2Path), remoteFolder.Name);
@@ -151,7 +178,7 @@ namespace Il2SkinDownloader
                 if (File.Exists(localPath))
                     File.Delete(localPath);
 
-                _googleDriveWrapper.DownloadAsync(remoteFile.Id, localPath).Wait();
+                googleDriveWrapper.DownloadAsync(remoteFile.Id, localPath).Wait();
             }
 
             foreach (var fileInfo in toDelete)

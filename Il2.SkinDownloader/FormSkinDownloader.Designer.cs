@@ -39,6 +39,7 @@
             this.labelPercentage = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.listViewDiffs = new System.Windows.Forms.ListView();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -113,7 +114,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(523, 207);
+            this.label2.Location = new System.Drawing.Point(523, 380);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(170, 13);
             this.label2.TabIndex = 7;
@@ -130,12 +131,25 @@
             this.pictureBox1.TabIndex = 8;
             this.pictureBox1.TabStop = false;
             // 
+            // listViewDiffs
+            // 
+            this.listViewDiffs.CheckBoxes = true;
+            this.listViewDiffs.FullRowSelect = true;
+            this.listViewDiffs.HideSelection = false;
+            this.listViewDiffs.Location = new System.Drawing.Point(169, 120);
+            this.listViewDiffs.Name = "listViewDiffs";
+            this.listViewDiffs.Size = new System.Drawing.Size(497, 218);
+            this.listViewDiffs.TabIndex = 9;
+            this.listViewDiffs.UseCompatibleStateImageBehavior = false;
+            this.listViewDiffs.View = System.Windows.Forms.View.Details;
+            // 
             // FormSkinDownloader
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.ClientSize = new System.Drawing.Size(711, 229);
+            this.ClientSize = new System.Drawing.Size(711, 402);
+            this.Controls.Add(this.listViewDiffs);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.labelPercentage);
@@ -169,6 +183,7 @@
         private System.Windows.Forms.Label labelPercentage;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ListView listViewDiffs;
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace IL2SkinDownloader.Core.GoogleDrive
 {
@@ -17,7 +18,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
         public string BrowserViewLink { get; set; }
         public DateTime CreatedTime { get; set; }
         public DateTime? ModifiedTime { get; set; }
-        public string Parents { get; set; }
+        public IList<string> Parents { get; set; }
 
         public GoogleDriveItem(string id)
         {

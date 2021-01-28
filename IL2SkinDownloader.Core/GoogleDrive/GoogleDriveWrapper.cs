@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -17,38 +18,34 @@ namespace IL2SkinDownloader.Core.GoogleDrive
 {
     public class GoogleDriveWrapper
     {
-        private readonly string _appName;
         private DriveService _service;
         private IEnumerable<string> Scopes { get; } = new List<string> { DriveService.Scope.Drive };
-        public GoogleDriveWrapper(string appName)
-        {
-            this._appName = appName;
-        }
 
-        public void Connect(string jsonPath)
+        public void Connect(string jsonPath, string appName)
         {
+            
             var json = System.IO.File.ReadAllText(jsonPath);
             var credentials = GoogleCredential.FromJson(json).CreateScoped(Scopes);
-            CreateDrive(credentials);
+            CreateDrive(credentials, appName);
         }
 
-        public async Task Connect(string idClient, string secret, CancellationToken cancellationToken)
+        public async Task Connect(string idClient, string secret, string appName, CancellationToken cancellationToken)
         {
             var credentials = await GoogleWebAuthorizationBroker.AuthorizeAsync(new ClientSecrets
             {
                 ClientId = idClient,
                 ClientSecret = secret
-            }, Scopes, _appName, cancellationToken, new FileDataStore("credentials.json"));
+            }, Scopes, appName, cancellationToken, new FileDataStore("credentials.json"));
 
-            CreateDrive(credentials);
+            CreateDrive(credentials, appName);
         }
 
-        private void CreateDrive(IConfigurableHttpClientInitializer credentials)
+        private void CreateDrive(IConfigurableHttpClientInitializer credentials, string appName)
         {
             _service = new DriveService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credentials,
-                ApplicationName = _appName,
+                ApplicationName = appName,
             });
         }
 
@@ -161,7 +158,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime.Value,
-                        Parents = file.Parents != null ? string.Join(",", file.Parents) : string.Empty,
+                        Parents = file.Parents,
                     });
                 }
             } while (pageToken != null);
@@ -194,7 +191,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime.Value,
-                        Parents = file.Parents != null ? string.Join(",", file.Parents) : string.Empty,
+                        Parents = file.Parents,
                     });
                 }
             } while (pageToken != null);
@@ -229,7 +226,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
 
             return result;
         }
-        
+
         public async Task ShareAsync(string itemId, string userEmail)
         {
             var batch = new BatchRequest(_service);

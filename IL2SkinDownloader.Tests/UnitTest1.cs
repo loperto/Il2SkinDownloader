@@ -18,8 +18,8 @@ namespace IL2SkinDownloader.Tests
         [Test]
         public async Task GoogleDriveConnection()
         {
-            var googleDrive = new GoogleDriveWrapper("skinDownloader");
-            googleDrive.Connect("auth.json");
+            var googleDrive = new GoogleDriveWrapper();
+            googleDrive.Connect("auth.json", "skinDownloader");
             var folders = await googleDrive.GetFoldersAsync();
             var folder = folders.FirstOrDefault(x => x.Name == "A20B");
             var files = await googleDrive.GetFilesInDirectoryAsync(folder.Id, CancellationToken.None);

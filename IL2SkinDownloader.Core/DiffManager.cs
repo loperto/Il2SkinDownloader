@@ -22,6 +22,7 @@ namespace IL2SkinDownloader.Core
         {
             _remoteSkinDrive = remoteSkinDrive;
             _il2InstallPath = il2InstallPath;
+            remoteSkinDrive.Connect();
         }
         private FileLocation Convert(FileInfo localFile)
         {

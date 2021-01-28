@@ -13,8 +13,7 @@ namespace IL2SkinDownloader.Core
         private readonly GoogleDriveWrapper _googleDriveWrapper;
         public GoogleDriveSkinDrive()
         {
-            _googleDriveWrapper = new GoogleDriveWrapper("skinDownloader");
-            _googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"));
+            _googleDriveWrapper = new GoogleDriveWrapper();
         }
         private FileLocation Convert(GoogleDriveItem googleDrive)
         {
@@ -28,7 +27,11 @@ namespace IL2SkinDownloader.Core
             };
         }
 
-
+        public Task Connect()
+        {
+            _googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"), "skinDownloader");
+            return Task.CompletedTask;
+        }
 
         public async Task<IEnumerable<RemoteDirectory>> GetDirectoriesAsync()
         {
