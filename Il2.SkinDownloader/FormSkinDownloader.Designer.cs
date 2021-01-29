@@ -45,15 +45,15 @@
             // 
             // textBox_Il2Path
             // 
-            this.textBox_Il2Path.Location = new System.Drawing.Point(166, 31);
+            this.textBox_Il2Path.Location = new System.Drawing.Point(184, 27);
             this.textBox_Il2Path.Name = "textBox_Il2Path";
-            this.textBox_Il2Path.Size = new System.Drawing.Size(500, 20);
+            this.textBox_Il2Path.Size = new System.Drawing.Size(553, 20);
             this.textBox_Il2Path.TabIndex = 0;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(166, 15);
+            this.label1.Location = new System.Drawing.Point(184, 11);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(294, 13);
             this.label1.TabIndex = 1;
@@ -62,7 +62,7 @@
             // button_OpenIl2Folder
             // 
             this.button_OpenIl2Folder.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.button_OpenIl2Folder.Location = new System.Drawing.Point(667, 30);
+            this.button_OpenIl2Folder.Location = new System.Drawing.Point(743, 27);
             this.button_OpenIl2Folder.Name = "button_OpenIl2Folder";
             this.button_OpenIl2Folder.Size = new System.Drawing.Size(26, 21);
             this.button_OpenIl2Folder.TabIndex = 2;
@@ -73,7 +73,7 @@
             // label_Status
             // 
             this.label_Status.AutoSize = true;
-            this.label_Status.Location = new System.Drawing.Point(163, 110);
+            this.label_Status.Location = new System.Drawing.Point(181, 108);
             this.label_Status.Name = "label_Status";
             this.label_Status.Size = new System.Drawing.Size(0, 13);
             this.label_Status.TabIndex = 3;
@@ -81,9 +81,9 @@
             // buttonCheckUpdates
             // 
             this.buttonCheckUpdates.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.buttonCheckUpdates.Location = new System.Drawing.Point(166, 55);
+            this.buttonCheckUpdates.Location = new System.Drawing.Point(184, 51);
             this.buttonCheckUpdates.Name = "buttonCheckUpdates";
-            this.buttonCheckUpdates.Size = new System.Drawing.Size(500, 23);
+            this.buttonCheckUpdates.Size = new System.Drawing.Size(585, 23);
             this.buttonCheckUpdates.TabIndex = 4;
             this.buttonCheckUpdates.Text = "Check for updates";
             this.buttonCheckUpdates.UseVisualStyleBackColor = true;
@@ -97,16 +97,16 @@
             // 
             // progressBarSkinDownload
             // 
-            this.progressBarSkinDownload.Location = new System.Drawing.Point(166, 84);
+            this.progressBarSkinDownload.Location = new System.Drawing.Point(184, 80);
             this.progressBarSkinDownload.Name = "progressBarSkinDownload";
-            this.progressBarSkinDownload.Size = new System.Drawing.Size(500, 23);
+            this.progressBarSkinDownload.Size = new System.Drawing.Size(585, 23);
             this.progressBarSkinDownload.Step = 1;
             this.progressBarSkinDownload.TabIndex = 5;
             // 
             // labelPercentage
             // 
             this.labelPercentage.AutoSize = true;
-            this.labelPercentage.Location = new System.Drawing.Point(672, 91);
+            this.labelPercentage.Location = new System.Drawing.Point(690, 87);
             this.labelPercentage.Name = "labelPercentage";
             this.labelPercentage.Size = new System.Drawing.Size(0, 13);
             this.labelPercentage.TabIndex = 6;
@@ -114,7 +114,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(523, 380);
+            this.label2.Location = new System.Drawing.Point(599, 411);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(170, 13);
             this.label2.TabIndex = 7;
@@ -124,9 +124,9 @@
             // 
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(9, 6);
+            this.pictureBox1.Location = new System.Drawing.Point(12, 11);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(148, 211);
+            this.pictureBox1.Size = new System.Drawing.Size(146, 201);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 8;
             this.pictureBox1.TabStop = false;
@@ -136,9 +136,9 @@
             this.listViewDiffs.CheckBoxes = true;
             this.listViewDiffs.FullRowSelect = true;
             this.listViewDiffs.HideSelection = false;
-            this.listViewDiffs.Location = new System.Drawing.Point(169, 120);
+            this.listViewDiffs.Location = new System.Drawing.Point(184, 132);
             this.listViewDiffs.Name = "listViewDiffs";
-            this.listViewDiffs.Size = new System.Drawing.Size(497, 218);
+            this.listViewDiffs.Size = new System.Drawing.Size(585, 266);
             this.listViewDiffs.TabIndex = 9;
             this.listViewDiffs.UseCompatibleStateImageBehavior = false;
             this.listViewDiffs.View = System.Windows.Forms.View.Details;
@@ -148,7 +148,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.ClientSize = new System.Drawing.Size(711, 402);
+            this.ClientSize = new System.Drawing.Size(777, 431);
             this.Controls.Add(this.listViewDiffs);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.label2);
@@ -159,7 +159,7 @@
             this.Controls.Add(this.button_OpenIl2Folder);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox_Il2Path);
-            this.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.ForeColor = System.Drawing.SystemColors.Window;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormSkinDownloader";

@@ -19,6 +19,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
         public DateTime CreatedTime { get; set; }
         public DateTime? ModifiedTime { get; set; }
         public IList<string> Parents { get; set; }
+        public long Size { get; set; }
 
         public GoogleDriveItem(string id)
         {

@@ -127,6 +127,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="download.ico" />
+    <None Include="plane-yellow.png" />
+    <None Include="plane-green.png" />
+    <None Include="plane-red.png" />
+    <None Include="Resources\PlaneRed.bmp" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

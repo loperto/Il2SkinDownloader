@@ -24,6 +24,7 @@ namespace IL2SkinDownloader.Core
                 LastUpdateDateTime = googleDrive.ModifiedTime,
                 Name = googleDrive.Name,
                 Path = googleDrive.DownloadLink,
+                Size = googleDrive.Size,
             };
         }
 

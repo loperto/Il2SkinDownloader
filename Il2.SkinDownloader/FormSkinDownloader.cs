@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,13 +28,21 @@ namespace Il2SkinDownloader
             _configuration = GetCurrentConfiguration();
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.WorkerSupportsCancellation = true;
+
             listViewDiffs.Columns.AddRange(new[]
             {
-                new ColumnHeader {Name = "Plane",Text = "Plane"},
-                new ColumnHeader {Name = "Status",Text = "Plane"},
-
+                new ColumnHeader {Name = "FileName",Text = "Plane",Width = 0},
+                new ColumnHeader {Name = "Status",Text = "Plane",Width = 0},
+                new ColumnHeader {Name = "Last Update",Text = "Last Update",Width = 0},
+                new ColumnHeader {Name = "Current",Text = "Current",Width = 0},
             });
-            listViewDiffs.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+            var imageList = new ImageList { ImageSize = new Size(20, 20) };
+            imageList.Images.Add(Status.Added.ToString(), new Bitmap(Properties.Resources.plane_red));
+            imageList.Images.Add(Status.Updated.ToString(), new Bitmap(Properties.Resources.plane_yellow));
+            listViewDiffs.SmallImageList = imageList;
+
+
             if (!string.IsNullOrWhiteSpace(_configuration.Il2Path))
             {
                 textBox_Il2Path.Text = _configuration.Il2Path;
@@ -93,22 +102,46 @@ namespace Il2SkinDownloader
             }
         }
 
+
+        private void LogChanged(int? percentage, string message)
+        {
+            label_Status.Text = message;
+            if (percentage.HasValue)
+            {
+                labelPercentage.Text = $"{percentage.Value}%";
+                progressBarSkinDownload.Increment(percentage.Value - progressBarSkinDownload.Value);
+            }
+        }
         private async void ButtonCheckUpdates_Click(object sender, EventArgs e)
         {
             if (_diffManager == null)
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
             label_Status.Text = "Check updates";
-            var diffs = await _diffManager.GetDiffAsync();
-            var items = diffs.Select(d =>
-            {
-                var status = d.GetStatus();
-                var item = new ListViewItem(d.Remote.Name);
-                item.SubItems.Add(status.ToString());
-                return item;
-            }).ToArray();
-            listViewDiffs.Items.AddRange(items);
+            var diffs = await _diffManager.GetDiffAsync(onProgress: LogChanged);
+            var groups = diffs.Select(x => x.GroupId)
+                .Distinct()
+                .Select(x => new ListViewGroup(x, HorizontalAlignment.Left))
+                .ToDictionary(x => x.Header);
 
+            var items = diffs.Select(i =>
+                {
+                    var status = i.GetStatus();
+                    var item = new ListViewItem(i.Remote.Name) { ImageKey = status.ToString() };
+                    if (groups.TryGetValue(i.GroupId, out var group))
+                    {
+                        item.Group = group;
+                    }
+                    item.SubItems.Add(status.ToString());
+                    item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
+                    item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
+                    return item;
+                }).ToArray();
+
+            listViewDiffs.Groups.AddRange(groups.Values.ToArray());
+            listViewDiffs.Items.AddRange(items);
+            listViewDiffs.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            label_Status.Text = "OK";
             //await _diffManager.ExecuteDiff(diff);
 
             //if (backgroundWorker.IsBusy != true)

@@ -33,6 +33,7 @@ namespace IL2SkinDownloader.Core
                 LastUpdateDateTime = localFile.LastWriteTime,
                 Name = localFile.Name,
                 Path = localFile.FullName,
+                Size = localFile.Length,
             };
         }
 
@@ -76,11 +77,13 @@ namespace IL2SkinDownloader.Core
             public FileLocation Remote { get; }
             public FileLocation Local { get; }
             public string LocalDestination { get; }
-            public DiffInfo(FileLocation remote, FileLocation local, string localDestination)
+            public string GroupId { get; set; }
+            public DiffInfo(FileLocation remote, FileLocation local, string localDestination, string groupId)
             {
                 Remote = remote;
                 Local = local;
                 LocalDestination = localDestination;
+                GroupId = groupId;
             }
             public Status GetStatus()
             {
@@ -95,16 +98,19 @@ namespace IL2SkinDownloader.Core
             }
         }
 
-        public async Task<List<DiffInfo>> GetDiffAsync(bool deleteFileDoNotExistInDrive = false)
+        public async Task<List<DiffInfo>> GetDiffAsync(bool deleteFileDoNotExistInDrive = false, Action<int?, string> onProgress = null)
         {
             //var configuration = StaticConfiguration.GetCurrentConfiguration();
             //Installer.Install(configuration);
             var il2LocalSkinsRootPath = IL2Helpers.SkinDirectoryPath(_il2InstallPath);
             var remoteFolders = await _remoteSkinDrive.GetDirectoriesAsync();
 
+            onProgress?.Invoke(null, "Starting Diff");
+
             var result = new List<DiffInfo>();
             foreach (var remoteFolder in remoteFolders)
             {
+                onProgress?.Invoke(0, $"Checking updates for {remoteFolder.Name}");
                 var localFolderPath = Path.Combine(il2LocalSkinsRootPath, remoteFolder.Name);
                 var remoteFileForFolder = (await _remoteSkinDrive.GetDirectoryFilesAsync(remoteFolder.Id)).ToArray();
                 var localFilesForFolder = GetLocalFiles(localFolderPath).ToArray();
@@ -114,11 +120,11 @@ namespace IL2SkinDownloader.Core
                     var existingFile = localFilesForFolder.FirstOrDefault(l => string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase));
                     if (existingFile == null)
                     {
-                        result.Add(new DiffInfo(remoteFile, null, localFolderPath));
+                        result.Add(new DiffInfo(remoteFile, null, localFolderPath, remoteFolder.Name));
                     }
                     else if (remoteFile.LastUpdateDateTime > existingFile.LastUpdateDateTime)
                     {
-                        result.Add(new DiffInfo(remoteFile, existingFile, localFolderPath));
+                        result.Add(new DiffInfo(remoteFile, existingFile, localFolderPath, remoteFolder.Name));
                     }
                 }
 
@@ -126,7 +132,7 @@ namespace IL2SkinDownloader.Core
                 {
                     var toDel = localFilesForFolder.Where(localFile => !remoteFileForFolder.Select(x => x.Name)
                             .Contains(localFile.Name, StringComparer.InvariantCultureIgnoreCase))
-                        .Select(x => new DiffInfo(null, x, x.Path));
+                        .Select(x => new DiffInfo(null, x, x.Path, x.Name));
 
                     result.AddRange(toDel);
                 }

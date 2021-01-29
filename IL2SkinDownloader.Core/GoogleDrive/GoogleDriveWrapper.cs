@@ -23,7 +23,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
 
         public void Connect(string jsonPath, string appName)
         {
-            
+
             var json = System.IO.File.ReadAllText(jsonPath);
             var credentials = GoogleCredential.FromJson(json).CreateScoped(Scopes);
             CreateDrive(credentials, appName);
@@ -138,7 +138,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
             var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = "trashed=false and mimeType != 'application/vnd.google-apps.folder'";
-            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
+            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents,size)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
@@ -159,6 +159,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime.Value,
                         Parents = file.Parents,
+                        Size = file.Size ?? 0,
                     });
                 }
             } while (pageToken != null);
@@ -171,7 +172,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
             var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = $"trashed=false and mimeType != 'application/vnd.google-apps.folder' and '{directory}' in parents";
-            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents)";
+            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents,size)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
@@ -192,6 +193,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                         ModifiedTime = file.ModifiedTime,
                         CreatedTime = file.CreatedTime.Value,
                         Parents = file.Parents,
+                        Size = file.Size ?? 0,
                     });
                 }
             } while (pageToken != null);
