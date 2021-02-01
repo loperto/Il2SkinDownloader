@@ -12,8 +12,6 @@ namespace IL2SkinDownloader.Core.GoogleDrive
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public bool IsFolder => MimeType == "application/vnd.google-apps.folder";
-        public string MimeType { get; set; }
         public string DownloadLink { get; set; }
         public string BrowserViewLink { get; set; }
         public DateTime CreatedTime { get; set; }
@@ -28,7 +26,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
 
         public override string ToString()
         {
-            return $"{nameof(Id)}: {Id}, {nameof(Name)}: {Name}, {nameof(IsFolder)}: {IsFolder}, {nameof(MimeType)}: {MimeType}, {nameof(CreatedTime)}: {CreatedTime}, {nameof(ModifiedTime)}: {ModifiedTime}";
+            return $"{nameof(Id)}: {Id}, {nameof(Name)}: {Name}, {nameof(CreatedTime)}: {CreatedTime}, {nameof(ModifiedTime)}: {ModifiedTime}, {nameof(Size)}: {Size}";
         }
     }
 }

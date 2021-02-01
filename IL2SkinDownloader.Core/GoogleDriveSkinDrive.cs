@@ -11,6 +11,8 @@ namespace IL2SkinDownloader.Core
     public class GoogleDriveSkinDrive : IRemoteSkinDrive
     {
         private readonly GoogleDriveWrapper _googleDriveWrapper;
+        private Dictionary<string, IEnumerable<GoogleDriveItem>> _forDirectoryCache;
+
         public GoogleDriveSkinDrive()
         {
             _googleDriveWrapper = new GoogleDriveWrapper();
@@ -42,8 +44,17 @@ namespace IL2SkinDownloader.Core
 
         public async Task<IEnumerable<FileLocation>> GetDirectoryFilesAsync(string directoryName)
         {
-            var files = await _googleDriveWrapper.GetFilesInDirectoryAsync(directoryName, CancellationToken.None);
-            return files.Select(Convert);
+            if (_forDirectoryCache == null)
+            {
+                var fromServer = await _googleDriveWrapper.GetFilesAsync(CancellationToken.None);
+                _forDirectoryCache = fromServer.SelectMany(x => x.Parents).Distinct().Select(directory =>
+                        new { directory, files = fromServer.Where(x => x.Parents.Contains(directory)) })
+                    .ToDictionary(x => x.directory, x => x.files);
+            }
+
+            if (_forDirectoryCache.TryGetValue(directoryName, out var fromDictionary))
+                return fromDictionary.Select(Convert);
+            return Enumerable.Empty<FileLocation>();
         }
 
         public Task DownloadFileAsync(FileLocation fileLocation, string downloadPath)

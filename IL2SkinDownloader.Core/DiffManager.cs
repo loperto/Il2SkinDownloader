@@ -47,7 +47,7 @@ namespace IL2SkinDownloader.Core
                 .Select(Convert);
         }
 
-        public async Task ExecuteDiff(List<DiffInfo> diffs)
+        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<int, string> onProgress = null)
         {
             foreach (var diff in diffs)
             {
@@ -103,21 +103,22 @@ namespace IL2SkinDownloader.Core
             //var configuration = StaticConfiguration.GetCurrentConfiguration();
             //Installer.Install(configuration);
             var il2LocalSkinsRootPath = IL2Helpers.SkinDirectoryPath(_il2InstallPath);
-            var remoteFolders = await _remoteSkinDrive.GetDirectoriesAsync();
-
-            onProgress?.Invoke(null, "Starting Diff");
+            var remoteFolders = (await _remoteSkinDrive.GetDirectoriesAsync()).ToArray();
 
             var result = new List<DiffInfo>();
-            foreach (var remoteFolder in remoteFolders)
+            for (var index = 0; index < remoteFolders.Length; index++)
             {
-                onProgress?.Invoke(0, $"Checking updates for {remoteFolder.Name}");
+                var percentage = 100 * (index + 1) / remoteFolders.Length;
+                onProgress?.Invoke(percentage, "TEST");
+                var remoteFolder = remoteFolders[index];
                 var localFolderPath = Path.Combine(il2LocalSkinsRootPath, remoteFolder.Name);
                 var remoteFileForFolder = (await _remoteSkinDrive.GetDirectoryFilesAsync(remoteFolder.Id)).ToArray();
                 var localFilesForFolder = GetLocalFiles(localFolderPath).ToArray();
 
                 foreach (var remoteFile in remoteFileForFolder)
                 {
-                    var existingFile = localFilesForFolder.FirstOrDefault(l => string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase));
+                    var existingFile = localFilesForFolder.FirstOrDefault(l =>
+                        string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase));
                     if (existingFile == null)
                     {
                         result.Add(new DiffInfo(remoteFile, null, localFolderPath, remoteFolder.Name));

@@ -20,6 +20,7 @@ namespace Il2SkinDownloader
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
         private DiffManager _diffManager;
+        private List<DiffManager.DiffInfo> _diffs;
 
         public FormSkinDownloader()
         {
@@ -118,36 +119,38 @@ namespace Il2SkinDownloader
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
             label_Status.Text = "Check updates";
-            var diffs = await _diffManager.GetDiffAsync(onProgress: LogChanged);
+            _diffs = await _diffManager.GetDiffAsync(onProgress: LogChanged);
+            PopulateListView(_diffs);
+            label_Status.Text = "OK";
+        }
+
+        private void PopulateListView(IReadOnlyCollection<DiffManager.DiffInfo> diffs)
+        {
+            listViewDiffs.Items.Clear();
+
             var groups = diffs.Select(x => x.GroupId)
                 .Distinct()
                 .Select(x => new ListViewGroup(x, HorizontalAlignment.Left))
                 .ToDictionary(x => x.Header);
 
-            var items = diffs.Select(i =>
+            var items = diffs.Select((i, index) =>
+            {
+                var status = i.GetStatus();
+                var item = new ListViewItem(i.Remote.Name) { ImageKey = status.ToString(), Tag = index };
+                if (groups.TryGetValue(i.GroupId, out var group))
                 {
-                    var status = i.GetStatus();
-                    var item = new ListViewItem(i.Remote.Name) { ImageKey = status.ToString() };
-                    if (groups.TryGetValue(i.GroupId, out var group))
-                    {
-                        item.Group = group;
-                    }
-                    item.SubItems.Add(status.ToString());
-                    item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
-                    item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
-                    return item;
-                }).ToArray();
+                    item.Group = @group;
+                }
+
+                item.SubItems.Add(status.ToString());
+                item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
+                item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
+                return item;
+            }).ToArray();
 
             listViewDiffs.Groups.AddRange(groups.Values.ToArray());
             listViewDiffs.Items.AddRange(items);
             listViewDiffs.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-            label_Status.Text = "OK";
-            //await _diffManager.ExecuteDiff(diff);
-
-            //if (backgroundWorker.IsBusy != true)
-            //{
-            //    backgroundWorker.RunWorkerAsync();
-            //}
         }
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -157,67 +160,7 @@ namespace Il2SkinDownloader
             worker.ReportProgress(0, $"Connecting to skin drive...");
 
 
-            var googleDriveWrapper = new GoogleDriveWrapper();
-            googleDriveWrapper.Connect(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "auth.json"), "skinDownloader");
 
-            worker.ReportProgress(0, $"Download the skin informations...");
-
-            //var configuration = StaticConfiguration.GetCurrentConfiguration();
-            //Installer.Install(configuration);
-
-            var remoteItems = googleDriveWrapper.GetFilesAsync(CancellationToken.None).Result;
-            var remoteFiles = remoteItems.Where(x => !x.IsFolder).ToArray();
-            var localPlanesFolder = IL2Helpers.GetCustomSkinDirectories(_configuration.Il2Path).Select(x => x.Name);
-            var remoteFolders = remoteItems.Where(x => x.IsFolder && localPlanesFolder.Contains(x.Name)).ToArray();
-            worker.ReportProgress(0, $"Checking skins to update...");
-
-            var downloads = new List<(GoogleDriveItem remoteFile, string localPath)>();
-            var toDelete = new List<FileInfo>();
-            foreach (var remoteFolder in remoteFolders)
-            {
-                var remoteFilesForDirectory = remoteFiles
-                    .Where(x => x.Parents?.Contains(remoteFolder.Id, StringComparer.InvariantCultureIgnoreCase) ?? false)
-                    .ToArray();
-
-                var localFolderPath = Path.Combine(IL2Helpers.SkinDirectoryPath(_configuration.Il2Path), remoteFolder.Name);
-
-                var currentLocalFiles = Directory.EnumerateFiles(localFolderPath)
-                    .Select(fileName => new FileInfo(fileName))
-                    .ToArray();
-
-                var del = currentLocalFiles
-                   .Where(localFile => !remoteFilesForDirectory.Select(x => x.Name).Contains(localFile.Name))
-                   .ToArray();
-
-                toDelete.AddRange(del);
-
-                foreach (var remoteFile in remoteFilesForDirectory)
-                {
-                    var existingFile = currentLocalFiles.FirstOrDefault(l => string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase));
-                    if (existingFile == null || remoteFile.ModifiedTime > existingFile.LastWriteTime)
-                    {
-                        var currentFilePath = Path.Combine(localFolderPath, remoteFile.Name);
-                        downloads.Add((remoteFile, currentFilePath));
-                    }
-                }
-            }
-
-            for (var i = 1; i <= downloads.Count; i++)
-            {
-                var (remoteFile, localPath) = downloads[i - 1];
-                var ff = (int)Math.Floor((double)i / downloads.Count * 100);
-                worker.ReportProgress((int)ff, $"Downloading {remoteFile.Name}");
-
-                if (File.Exists(localPath))
-                    File.Delete(localPath);
-
-                googleDriveWrapper.DownloadAsync(remoteFile.Id, localPath).Wait();
-            }
-
-            foreach (var fileInfo in toDelete)
-            {
-                File.Delete(fileInfo.FullName);
-            }
 
             worker.ReportProgress(100, $"Job completed");
         }
@@ -247,9 +190,28 @@ namespace Il2SkinDownloader
             }
         }
 
-        private void FormSkinDownloader_Load(object sender, EventArgs e)
+        private void listViewDiffs_ItemChecked(object sender, ItemCheckedEventArgs e)
         {
+            if (!buttonExec.Enabled && listViewDiffs.CheckedItems.Count > 0)
+                buttonExec.Enabled = true;
+            else if (buttonExec.Enabled && listViewDiffs.CheckedItems.Count == 0)
+                buttonExec.Enabled = false;
+        }
 
+        private async void buttonExec_Click(object sender, EventArgs e)
+        {
+            if (!_diffs.Any() || listViewDiffs.CheckedItems.Count == 0)
+            {
+                MessageBox.Show("Please selected the items that you would be download.");
+                return;
+            }
+
+            var diffs = listViewDiffs.CheckedItems
+                .OfType<ListViewItem>()
+                .Select(x => _diffs[(int)x.Tag])
+                .ToList();
+
+            await _diffManager.ExecuteDiff(diffs);
         }
     }
 }

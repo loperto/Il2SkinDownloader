@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -138,7 +137,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
             var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = "trashed=false and mimeType != 'application/vnd.google-apps.folder'";
-            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents,size)";
+            listRequest.Fields = "nextPageToken, files(id, name,webContentLink,modifiedTime,createdTime,parents,size)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
@@ -153,7 +152,6 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                     result.Add(new GoogleDriveItem(file.Id)
                     {
                         Name = file.Name,
-                        MimeType = file.MimeType,
                         BrowserViewLink = file.WebViewLink,
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
@@ -172,7 +170,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
             var listRequest = _service.Files.List();
             listRequest.PageSize = 20;
             listRequest.Q = $"trashed=false and mimeType != 'application/vnd.google-apps.folder' and '{directory}' in parents";
-            listRequest.Fields = "nextPageToken, files(id, name,mimeType,webContentLink,webViewLink,modifiedTime,createdTime,parents,size)";
+            listRequest.Fields = "nextPageToken, files(id, name,webContentLink,modifiedTime,createdTime,parents,size)";
             string pageToken = null;
             var result = new List<GoogleDriveItem>();
             do
@@ -187,7 +185,6 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                     result.Add(new GoogleDriveItem(file.Id)
                     {
                         Name = file.Name,
-                        MimeType = file.MimeType,
                         BrowserViewLink = file.WebViewLink,
                         DownloadLink = file.WebContentLink,
                         ModifiedTime = file.ModifiedTime,
