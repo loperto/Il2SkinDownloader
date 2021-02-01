@@ -4,11 +4,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using IL2SkinDownloader.Core;
-using IL2SkinDownloader.Core.GoogleDrive;
 using IL2SkinDownloader.Core.IL2;
 using Newtonsoft.Json;
 
@@ -115,6 +112,12 @@ namespace Il2SkinDownloader
         }
         private async void ButtonCheckUpdates_Click(object sender, EventArgs e)
         {
+            if (!Directory.Exists(_configuration.Il2Path))
+            {
+                MessageBox.Show($"IL2 Installation path {_configuration.Il2Path} not found!");
+                return;
+            }
+
             if (_diffManager == null)
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
@@ -206,12 +209,14 @@ namespace Il2SkinDownloader
                 return;
             }
 
+            progressBarSkinDownload.Value = 0;
+
             var diffs = listViewDiffs.CheckedItems
                 .OfType<ListViewItem>()
                 .Select(x => _diffs[(int)x.Tag])
                 .ToList();
 
-            await _diffManager.ExecuteDiff(diffs);
+            await _diffManager.ExecuteDiff(diffs, (percentage, diff) => Console.WriteLine(percentage.ToString()));
         }
     }
 }

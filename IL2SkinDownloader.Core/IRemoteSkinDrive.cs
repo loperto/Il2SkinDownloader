@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace IL2SkinDownloader.Core
@@ -8,6 +9,6 @@ namespace IL2SkinDownloader.Core
         Task Connect();
         Task<IEnumerable<RemoteDirectory>> GetDirectoriesAsync();
         Task<IEnumerable<FileLocation>> GetDirectoryFilesAsync(string directoryName);
-        Task DownloadFileAsync(FileLocation fileLocation, string downloadPath);
+        Task DownloadFileAsync(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null);
     }
 }

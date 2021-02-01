@@ -47,8 +47,10 @@ namespace IL2SkinDownloader.Core
                 .Select(Convert);
         }
 
-        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<int, string> onProgress = null)
+        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<long, string> onProgress = null)
         {
+            var totalSize = diffs.Sum(x => x.Remote.Size);
+            var downloaded = 0L;
             foreach (var diff in diffs)
             {
                 var status = diff.GetStatus();
@@ -57,11 +59,22 @@ namespace IL2SkinDownloader.Core
                     case Status.Added:
                         if (!Directory.Exists(diff.LocalDestination))
                             Directory.CreateDirectory(diff.LocalDestination);
-                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.LocalDestination, diff.Remote.Name));
+                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.LocalDestination, diff.Remote.Name),
+                            bytes =>
+                            {
+                                downloaded += bytes;
+                                var percentage = 100 * (downloaded + 1) / totalSize;
+                                onProgress?.Invoke(percentage, "Download in progress");
+                            });
                         break;
                     case Status.Updated:
                         File.Delete(diff.Local.Path);
-                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.Local.Path, diff.Local.Name));
+                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.Local.Path, diff.Local.Name), bytes =>
+                        {
+                            downloaded += bytes;
+                            var percentage = 100 * (downloaded + 1) / totalSize;
+                            onProgress?.Invoke(percentage, "Download in progress");
+                        });
                         break;
                     case Status.Deleted:
                         File.Delete(diff.Local.Path);

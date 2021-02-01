@@ -57,9 +57,9 @@ namespace IL2SkinDownloader.Core
             return Enumerable.Empty<FileLocation>();
         }
 
-        public Task DownloadFileAsync(FileLocation fileLocation, string downloadPath)
+        public Task DownloadFileAsync(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null)
         {
-            return _googleDriveWrapper.DownloadAsync(fileLocation.Id, downloadPath);
+            return _googleDriveWrapper.DownloadAsync(fileLocation.Id, downloadPath, onProgress);
         }
     }
 }
