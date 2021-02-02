@@ -201,6 +201,15 @@ namespace Il2SkinDownloader
                 buttonExec.Enabled = false;
         }
 
+        public void UpdateProgress(int progress)
+        {
+            if (progressBarSkinDownload.InvokeRequired)
+                progressBarSkinDownload.BeginInvoke(new Action(() => progressBarSkinDownload.Value = progress));
+            else
+                progressBarSkinDownload.Value = progress;
+
+        }
+
         private async void buttonExec_Click(object sender, EventArgs e)
         {
             if (!_diffs.Any() || listViewDiffs.CheckedItems.Count == 0)
@@ -216,7 +225,7 @@ namespace Il2SkinDownloader
                 .Select(x => _diffs[(int)x.Tag])
                 .ToList();
 
-            await _diffManager.ExecuteDiff(diffs, (percentage, diff) => Console.WriteLine(percentage.ToString()));
+            await _diffManager.ExecuteDiff(diffs, (progressStatus, diff) => UpdateProgress(progressStatus.Percentage));
         }
     }
 }

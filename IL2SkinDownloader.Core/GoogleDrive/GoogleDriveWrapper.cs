@@ -96,7 +96,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
             await updateRequest.ExecuteAsync();
         }
 
-        public async Task DownloadAsync(string fileId, string downloadPath, Action<long> onProgress = null)
+        public async Task DownloadAsync(string fileId, string downloadPath, Action<long> onProgress = null, Action onCompleted = null)
         {
             var request = _service.Files.Get(fileId);
             using (var stream = new FileStream(downloadPath, FileMode.Create))
@@ -115,6 +115,7 @@ namespace IL2SkinDownloader.Core.GoogleDrive
                             case DownloadStatus.Completed:
                                 {
                                     Console.WriteLine("DownloadAsync complete.");
+                                    onCompleted?.Invoke();
                                     break;
                                 }
                             case DownloadStatus.Failed:

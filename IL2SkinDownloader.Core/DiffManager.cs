@@ -14,6 +14,18 @@ namespace IL2SkinDownloader.Core
         Updated,
         Deleted,
     }
+
+    public class ProgressStatus
+    {
+        public long Total { get; internal set; }
+        public long Processed { get; internal set; }
+        public long Remaining => Total - Processed;
+        public int Percentage => (int)(100 * (Processed + 1) / Total);
+        public static ProgressStatus Create(long total, long processed)
+        {
+            return new ProgressStatus { Total = total, Processed = processed };
+        }
+    }
     public class DiffManager
     {
         private readonly IRemoteSkinDrive _remoteSkinDrive;
@@ -47,13 +59,14 @@ namespace IL2SkinDownloader.Core
                 .Select(Convert);
         }
 
-        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<long, string> onProgress = null)
+        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<ProgressStatus, string> onProgress = null)
         {
             var totalSize = diffs.Sum(x => x.Remote.Size);
             var downloaded = 0L;
             foreach (var diff in diffs)
             {
                 var status = diff.GetStatus();
+                var currentFileDownloaded = 0L;
                 switch (status)
                 {
                     case Status.Added:
@@ -62,18 +75,18 @@ namespace IL2SkinDownloader.Core
                         await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.LocalDestination, diff.Remote.Name),
                             bytes =>
                             {
-                                downloaded += bytes;
-                                var percentage = 100 * (downloaded + 1) / totalSize;
-                                onProgress?.Invoke(percentage, "Download in progress");
+                                currentFileDownloaded = bytes;
+                                var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded);
+                                onProgress?.Invoke(progress, $"Downloading {diff.Remote.Name}");
                             });
                         break;
                     case Status.Updated:
                         File.Delete(diff.Local.Path);
                         await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.Local.Path, diff.Local.Name), bytes =>
                         {
-                            downloaded += bytes;
-                            var percentage = 100 * (downloaded + 1) / totalSize;
-                            onProgress?.Invoke(percentage, "Download in progress");
+                            currentFileDownloaded = bytes;
+                            var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded);
+                            onProgress?.Invoke(progress, $"Downloading {diff.Remote.Name}");
                         });
                         break;
                     case Status.Deleted:
@@ -82,6 +95,8 @@ namespace IL2SkinDownloader.Core
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                downloaded += currentFileDownloaded;
             }
         }
 
