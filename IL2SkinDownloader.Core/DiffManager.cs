@@ -63,7 +63,7 @@ namespace IL2SkinDownloader.Core
                         break;
                     case Status.Updated:
                         File.Delete(diff.Local.Path);
-                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.Local.Path, diff.Local.Name), bytes =>
+                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, diff.Local.Path, bytes =>
                         {
                             currentFileDownloaded = bytes;
                             var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded, $"Downloading {diff.Remote.Name}");

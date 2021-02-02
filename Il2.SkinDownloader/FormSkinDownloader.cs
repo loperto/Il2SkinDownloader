@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using IL2SkinDownloader.Core;
 using IL2SkinDownloader.Core.IL2;
@@ -107,6 +108,11 @@ namespace Il2SkinDownloader
                 return;
             }
 
+            await GetDiff();
+        }
+
+        private async Task GetDiff()
+        {
             if (_diffManager == null)
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
@@ -203,7 +209,7 @@ namespace Il2SkinDownloader
             progressBarSkinDownload.Visible = true;
 
             await _diffManager.ExecuteDiff(diffs, UpdateProgress);
-            await _diffManager.GetDiffAsync();
+            await GetDiff();
 
             labelPercentage.Visible = false;
             progressBarSkinDownload.Visible = false;
