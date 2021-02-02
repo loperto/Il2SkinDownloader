@@ -5,27 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using IL2SkinDownloader.Core.IL2;
 
-
 namespace IL2SkinDownloader.Core
 {
-    public enum Status
-    {
-        Added,
-        Updated,
-        Deleted,
-    }
-
-    public class ProgressStatus
-    {
-        public long Total { get; internal set; }
-        public long Processed { get; internal set; }
-        public long Remaining => Total - Processed;
-        public int Percentage => (int)(100 * (Processed + 1) / Total);
-        public static ProgressStatus Create(long total, long processed)
-        {
-            return new ProgressStatus { Total = total, Processed = processed };
-        }
-    }
     public class DiffManager
     {
         private readonly IRemoteSkinDrive _remoteSkinDrive;
@@ -59,15 +40,15 @@ namespace IL2SkinDownloader.Core
                 .Select(Convert);
         }
 
-        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<ProgressStatus, string> onProgress = null)
+        public async Task ExecuteDiff(List<DiffInfo> diffs, Action<ProgressStatus> onProgress = null)
         {
             var totalSize = diffs.Sum(x => x.Remote.Size);
             var downloaded = 0L;
+            onProgress?.Invoke(ProgressStatus.Create(totalSize, downloaded, "Starting downloading..."));
             foreach (var diff in diffs)
             {
-                var status = diff.GetStatus();
                 var currentFileDownloaded = 0L;
-                switch (status)
+                switch (diff.Status)
                 {
                     case Status.Added:
                         if (!Directory.Exists(diff.LocalDestination))
@@ -76,8 +57,8 @@ namespace IL2SkinDownloader.Core
                             bytes =>
                             {
                                 currentFileDownloaded = bytes;
-                                var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded);
-                                onProgress?.Invoke(progress, $"Downloading {diff.Remote.Name}");
+                                var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded, $"Downloading {diff.Remote.Name}");
+                                onProgress?.Invoke(progress);
                             });
                         break;
                     case Status.Updated:
@@ -85,8 +66,8 @@ namespace IL2SkinDownloader.Core
                         await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.Local.Path, diff.Local.Name), bytes =>
                         {
                             currentFileDownloaded = bytes;
-                            var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded);
-                            onProgress?.Invoke(progress, $"Downloading {diff.Remote.Name}");
+                            var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded, $"Downloading {diff.Remote.Name}");
+                            onProgress?.Invoke(progress);
                         });
                         break;
                     case Status.Deleted:
@@ -100,33 +81,8 @@ namespace IL2SkinDownloader.Core
             }
         }
 
-        public class DiffInfo
-        {
-            public FileLocation Remote { get; }
-            public FileLocation Local { get; }
-            public string LocalDestination { get; }
-            public string GroupId { get; set; }
-            public DiffInfo(FileLocation remote, FileLocation local, string localDestination, string groupId)
-            {
-                Remote = remote;
-                Local = local;
-                LocalDestination = localDestination;
-                GroupId = groupId;
-            }
-            public Status GetStatus()
-            {
-                if (Remote != null && Local == null)
-                    return Status.Added;
-                if (Remote != null && Local != null && Remote.LastUpdateDateTime > Local.LastUpdateDateTime)
-                    return Status.Updated;
-                if (Remote == null && Local != null)
-                    return Status.Deleted;
 
-                throw new NotSupportedException($"Invalid diff status Local:{Local} Remote:{Remote}");
-            }
-        }
-
-        public async Task<List<DiffInfo>> GetDiffAsync(bool deleteFileDoNotExistInDrive = false, Action<int?, string> onProgress = null)
+        public async Task<List<DiffInfo>> GetDiffAsync(bool deleteFileDoNotExistInDrive = false)
         {
             //var configuration = StaticConfiguration.GetCurrentConfiguration();
             //Installer.Install(configuration);
@@ -134,11 +90,8 @@ namespace IL2SkinDownloader.Core
             var remoteFolders = (await _remoteSkinDrive.GetDirectoriesAsync()).ToArray();
 
             var result = new List<DiffInfo>();
-            for (var index = 0; index < remoteFolders.Length; index++)
+            foreach (var remoteFolder in remoteFolders)
             {
-                var percentage = 100 * (index + 1) / remoteFolders.Length;
-                onProgress?.Invoke(percentage, "TEST");
-                var remoteFolder = remoteFolders[index];
                 var localFolderPath = Path.Combine(il2LocalSkinsRootPath, remoteFolder.Name);
                 var remoteFileForFolder = (await _remoteSkinDrive.GetDirectoryFilesAsync(remoteFolder.Id)).ToArray();
                 var localFilesForFolder = GetLocalFiles(localFolderPath).ToArray();
@@ -147,14 +100,8 @@ namespace IL2SkinDownloader.Core
                 {
                     var existingFile = localFilesForFolder.FirstOrDefault(l =>
                         string.Equals(remoteFile.Name, l.Name, StringComparison.InvariantCultureIgnoreCase));
-                    if (existingFile == null)
-                    {
-                        result.Add(new DiffInfo(remoteFile, null, localFolderPath, remoteFolder.Name));
-                    }
-                    else if (remoteFile.LastUpdateDateTime > existingFile.LastUpdateDateTime)
-                    {
-                        result.Add(new DiffInfo(remoteFile, existingFile, localFolderPath, remoteFolder.Name));
-                    }
+                    
+                    result.Add(new DiffInfo(remoteFile, existingFile, localFolderPath, remoteFolder.Name));
                 }
 
                 if (deleteFileDoNotExistInDrive)
@@ -167,7 +114,7 @@ namespace IL2SkinDownloader.Core
                 }
             }
 
-            return result;
+            return result.Where(x=> x.Status != Status.Installed).ToList();
         }
 
     }

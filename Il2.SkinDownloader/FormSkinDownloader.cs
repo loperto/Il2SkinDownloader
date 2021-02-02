@@ -17,20 +17,19 @@ namespace Il2SkinDownloader
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
         private Configuration _configuration;
         private DiffManager _diffManager;
-        private List<DiffManager.DiffInfo> _diffs;
+        private List<DiffInfo> _diffs;
 
         public FormSkinDownloader()
         {
             InitializeComponent();
             buttonCheckUpdates.Enabled = false;
             _configuration = GetCurrentConfiguration();
-            backgroundWorker.WorkerReportsProgress = true;
-            backgroundWorker.WorkerSupportsCancellation = true;
 
             listViewDiffs.Columns.AddRange(new[]
             {
                 new ColumnHeader {Name = "FileName",Text = "Plane",Width = 0},
-                new ColumnHeader {Name = "Status",Text = "Plane",Width = 0},
+                new ColumnHeader {Name = "Status",Text = "Status",Width = 0},
+                new ColumnHeader {Name = "Size",Text = "Size",Width = 0},
                 new ColumnHeader {Name = "Last Update",Text = "Last Update",Width = 0},
                 new ColumnHeader {Name = "Current",Text = "Current",Width = 0},
             });
@@ -100,16 +99,6 @@ namespace Il2SkinDownloader
             }
         }
 
-
-        private void LogChanged(int? percentage, string message)
-        {
-            label_Status.Text = message;
-            if (percentage.HasValue)
-            {
-                labelPercentage.Text = $"{percentage.Value}%";
-                progressBarSkinDownload.Increment(percentage.Value - progressBarSkinDownload.Value);
-            }
-        }
         private async void ButtonCheckUpdates_Click(object sender, EventArgs e)
         {
             if (!Directory.Exists(_configuration.Il2Path))
@@ -121,13 +110,13 @@ namespace Il2SkinDownloader
             if (_diffManager == null)
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
-            label_Status.Text = "Check updates";
-            _diffs = await _diffManager.GetDiffAsync(onProgress: LogChanged);
+            label_Status.Text = "Checking for updates...";
+            _diffs = await _diffManager.GetDiffAsync();
             PopulateListView(_diffs);
-            label_Status.Text = "OK";
+            label_Status.Text = $"{_diffs.Count} updated items found";
         }
 
-        private void PopulateListView(IReadOnlyCollection<DiffManager.DiffInfo> diffs)
+        private void PopulateListView(IReadOnlyCollection<DiffInfo> diffs)
         {
             listViewDiffs.Items.Clear();
 
@@ -138,14 +127,14 @@ namespace Il2SkinDownloader
 
             var items = diffs.Select((i, index) =>
             {
-                var status = i.GetStatus();
-                var item = new ListViewItem(i.Remote.Name) { ImageKey = status.ToString(), Tag = index };
+                var item = new ListViewItem(i.Remote.Name) { ImageKey = i.Status.ToString(), Tag = index };
                 if (groups.TryGetValue(i.GroupId, out var group))
                 {
                     item.Group = @group;
                 }
 
-                item.SubItems.Add(status.ToString());
+                item.SubItems.Add(i.Status.ToString());
+                item.SubItems.Add(GetReadableSize(i.Remote.Size));
                 item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
                 item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
                 return item;
@@ -156,43 +145,6 @@ namespace Il2SkinDownloader
             listViewDiffs.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
-        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-
-            var worker = sender as BackgroundWorker;
-            worker.ReportProgress(0, $"Connecting to skin drive...");
-
-
-
-
-            worker.ReportProgress(100, $"Job completed");
-        }
-
-        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            var status = e.UserState.ToString();
-            label_Status.Text = status;
-            labelPercentage.Text = $"{e.ProgressPercentage.ToString()}%";
-            progressBarSkinDownload.Increment(e.ProgressPercentage - progressBarSkinDownload.Value);
-        }
-
-        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                label_Status.Text = "Job Canceled!";
-            }
-            else if (e.Error != null)
-            {
-                MessageBox.Show(e.Error.ToString(), "ERROR");
-            }
-            else
-            {
-                MessageBox.Show("Job completed!");
-                Close();
-            }
-        }
-
         private void listViewDiffs_ItemChecked(object sender, ItemCheckedEventArgs e)
         {
             if (!buttonExec.Enabled && listViewDiffs.CheckedItems.Count > 0)
@@ -201,15 +153,39 @@ namespace Il2SkinDownloader
                 buttonExec.Enabled = false;
         }
 
-        public void UpdateProgress(int progress)
+        public void UpdateProgress(ProgressStatus progress)
         {
             if (progressBarSkinDownload.InvokeRequired)
-                progressBarSkinDownload.BeginInvoke(new Action(() => progressBarSkinDownload.Value = progress));
+                progressBarSkinDownload.BeginInvoke(new Action(() => progressBarSkinDownload.Value = progress.Percentage));
             else
-                progressBarSkinDownload.Value = progress;
+                progressBarSkinDownload.Value = progress.Percentage;
+
+            if (labelPercentage.InvokeRequired)
+                labelPercentage.BeginInvoke(new Action(() => labelPercentage.Text = $"{progress.Percentage}%"));
+            else
+                labelPercentage.Text = $"{progress.Percentage}%";
+
+
+            var description = $"{progress.Description} {GetReadableSize(progress.Remaining)}";
+            if (label_Status.InvokeRequired)
+                label_Status.BeginInvoke(new Action(() => label_Status.Text = description));
+            else
+                label_Status.Text = description;
 
         }
 
+        private string GetReadableSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            int order = 0;
+            while (bytes >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                bytes = bytes / 1024;
+            }
+
+            return $"{bytes:0.##} {sizes[order]}";
+        }
         private async void buttonExec_Click(object sender, EventArgs e)
         {
             if (!_diffs.Any() || listViewDiffs.CheckedItems.Count == 0)
@@ -218,14 +194,19 @@ namespace Il2SkinDownloader
                 return;
             }
 
-            progressBarSkinDownload.Value = 0;
-
             var diffs = listViewDiffs.CheckedItems
-                .OfType<ListViewItem>()
-                .Select(x => _diffs[(int)x.Tag])
-                .ToList();
+                  .OfType<ListViewItem>()
+                  .Select(x => _diffs[(int)x.Tag])
+                  .ToList();
 
-            await _diffManager.ExecuteDiff(diffs, (progressStatus, diff) => UpdateProgress(progressStatus.Percentage));
+            labelPercentage.Visible = true;
+            progressBarSkinDownload.Visible = true;
+
+            await _diffManager.ExecuteDiff(diffs, UpdateProgress);
+            await _diffManager.GetDiffAsync();
+
+            labelPercentage.Visible = false;
+            progressBarSkinDownload.Visible = false;
         }
     }
 }
