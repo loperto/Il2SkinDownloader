@@ -36,7 +36,7 @@ namespace Il2SkinDownloader
             });
 
             var imageList = new ImageList { ImageSize = new Size(20, 20) };
-            imageList.Images.Add(Status.Added.ToString(), new Bitmap(Properties.Resources.plane_red));
+            imageList.Images.Add(Status.Added.ToString(), new Bitmap(Properties.Resources.plane_green));
             imageList.Images.Add(Status.Updated.ToString(), new Bitmap(Properties.Resources.plane_yellow));
             listViewDiffs.SmallImageList = imageList;
 
@@ -223,6 +223,6 @@ namespace Il2SkinDownloader
             progressBarSkinDownload.Visible = false;
         }
 
-        
+
     }
 }
