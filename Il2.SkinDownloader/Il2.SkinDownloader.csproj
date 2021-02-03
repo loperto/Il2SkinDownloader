@@ -127,12 +127,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="download.ico" />
-    <None Include="refresh.png" />
-    <None Include="download.png" />
-    <None Include="plane-yellow.png" />
-    <None Include="plane-green.png" />
-    <None Include="plane-red.png" />
-    <None Include="Resources\PlaneRed.bmp" />
+    <None Include="Resources\refresh.png" />
+    <None Include="Resources\plane-yellow.png" />
+    <None Include="Resources\plane-red.png" />
+    <None Include="Resources\plane-green.png" />
+    <None Include="Resources\gemini.jpg" />
+    <None Include="Resources\download.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
@@ -152,5 +152,6 @@
       <Name>IL2SkinDownloader.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
