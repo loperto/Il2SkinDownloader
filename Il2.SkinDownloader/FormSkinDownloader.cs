@@ -116,7 +116,7 @@ namespace Il2SkinDownloader
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
             label_Status.Text = "Checking for updates...";
-            _diffs = await _diffManager.GetDiffAsync();
+            _diffs = (await _diffManager.GetDiffAsync()).OrderBy(x => x.GroupId).ToList();
             PopulateListView(_diffs);
             label_Status.Text = $"{_diffs.Count} updated items found";
         }
@@ -131,19 +131,19 @@ namespace Il2SkinDownloader
                 .ToDictionary(x => x.Header);
 
             var items = diffs.Select((i, index) =>
-            {
-                var item = new ListViewItem(i.Remote.Name) { ImageKey = i.Status.ToString(), Tag = index };
-                if (groups.TryGetValue(i.GroupId, out var group))
-                {
-                    item.Group = @group;
-                }
+              {
+                  var item = new ListViewItem(i.Remote.Name) { ImageKey = i.Status.ToString(), Tag = index };
+                  if (groups.TryGetValue(i.GroupId, out var group))
+                  {
+                      item.Group = @group;
+                  }
 
-                item.SubItems.Add(i.Status.ToString());
-                item.SubItems.Add(GetReadableSize(i.Remote.Size));
-                item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
-                item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
-                return item;
-            }).ToArray();
+                  item.SubItems.Add(i.Status.ToString());
+                  item.SubItems.Add(GetReadableSize(i.Remote.Size));
+                  item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
+                  item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
+                  return item;
+              }).ToArray();
 
             listViewDiffs.Groups.AddRange(groups.Values.ToArray());
             listViewDiffs.Items.AddRange(items);
