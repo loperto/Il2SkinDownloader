@@ -112,10 +112,12 @@ namespace Il2SkinDownloader
 
         private async Task GetDiff()
         {
+
+            label_Status.Text = "Checking for skin updates...";
+
             if (_diffManager == null)
                 _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
 
-            label_Status.Text = "Checking for updates...";
             _diffs = (await _diffManager.GetDiffAsync()).OrderBy(x => x.GroupId).ToList();
             PopulateListView(_diffs);
             label_Status.Text = $"{_diffs.Count} updated items found";

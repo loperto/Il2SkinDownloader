@@ -74,7 +74,8 @@
             // label_Status
             // 
             this.label_Status.AutoSize = true;
-            this.label_Status.Location = new System.Drawing.Point(184, 350);
+            this.label_Status.Location = new System.Drawing.Point(184, 93);
+            this.label_Status.Margin = new System.Windows.Forms.Padding(1);
             this.label_Status.Name = "label_Status";
             this.label_Status.Size = new System.Drawing.Size(0, 13);
             this.label_Status.TabIndex = 3;
@@ -84,7 +85,7 @@
             this.buttonCheckUpdates.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
             this.buttonCheckUpdates.Image = ((System.Drawing.Image)(resources.GetObject("buttonCheckUpdates.Image")));
             this.buttonCheckUpdates.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.buttonCheckUpdates.Location = new System.Drawing.Point(404, 53);
+            this.buttonCheckUpdates.Location = new System.Drawing.Point(407, 50);
             this.buttonCheckUpdates.Name = "buttonCheckUpdates";
             this.buttonCheckUpdates.Size = new System.Drawing.Size(177, 31);
             this.buttonCheckUpdates.TabIndex = 4;
@@ -117,7 +118,7 @@
             this.listViewDiffs.CheckBoxes = true;
             this.listViewDiffs.FullRowSelect = true;
             this.listViewDiffs.HideSelection = false;
-            this.listViewDiffs.Location = new System.Drawing.Point(184, 90);
+            this.listViewDiffs.Location = new System.Drawing.Point(184, 110);
             this.listViewDiffs.Name = "listViewDiffs";
             this.listViewDiffs.Size = new System.Drawing.Size(580, 257);
             this.listViewDiffs.TabIndex = 9;
@@ -131,7 +132,8 @@
             this.buttonExec.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
             this.buttonExec.Image = ((System.Drawing.Image)(resources.GetObject("buttonExec.Image")));
             this.buttonExec.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.buttonExec.Location = new System.Drawing.Point(587, 53);
+            this.buttonExec.Location = new System.Drawing.Point(587, 50);
+            this.buttonExec.Margin = new System.Windows.Forms.Padding(0);
             this.buttonExec.Name = "buttonExec";
             this.buttonExec.Size = new System.Drawing.Size(177, 31);
             this.buttonExec.TabIndex = 10;
@@ -189,6 +191,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormSkinDownloader";
             this.Text = "Il2 Skin Downloader";
+            this.Load += new System.EventHandler(this.FormSkinDownloader_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
