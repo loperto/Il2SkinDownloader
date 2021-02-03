@@ -40,6 +40,7 @@
             this.buttonExec = new System.Windows.Forms.Button();
             this.labelPercentage = new System.Windows.Forms.Label();
             this.progressBarSkinDownload = new System.Windows.Forms.ProgressBar();
+            this.labelProgress = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -62,7 +63,7 @@
             // button_OpenIl2Folder
             // 
             this.button_OpenIl2Folder.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.button_OpenIl2Folder.Location = new System.Drawing.Point(743, 27);
+            this.button_OpenIl2Folder.Location = new System.Drawing.Point(738, 26);
             this.button_OpenIl2Folder.Name = "button_OpenIl2Folder";
             this.button_OpenIl2Folder.Size = new System.Drawing.Size(26, 21);
             this.button_OpenIl2Folder.TabIndex = 2;
@@ -73,7 +74,7 @@
             // label_Status
             // 
             this.label_Status.AutoSize = true;
-            this.label_Status.Location = new System.Drawing.Point(184, 328);
+            this.label_Status.Location = new System.Drawing.Point(184, 350);
             this.label_Status.Name = "label_Status";
             this.label_Status.Size = new System.Drawing.Size(0, 13);
             this.label_Status.TabIndex = 3;
@@ -81,9 +82,11 @@
             // buttonCheckUpdates
             // 
             this.buttonCheckUpdates.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.buttonCheckUpdates.Location = new System.Drawing.Point(184, 51);
+            this.buttonCheckUpdates.Image = ((System.Drawing.Image)(resources.GetObject("buttonCheckUpdates.Image")));
+            this.buttonCheckUpdates.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.buttonCheckUpdates.Location = new System.Drawing.Point(404, 53);
             this.buttonCheckUpdates.Name = "buttonCheckUpdates";
-            this.buttonCheckUpdates.Size = new System.Drawing.Size(585, 23);
+            this.buttonCheckUpdates.Size = new System.Drawing.Size(177, 31);
             this.buttonCheckUpdates.TabIndex = 4;
             this.buttonCheckUpdates.Text = "Check for updates";
             this.buttonCheckUpdates.UseVisualStyleBackColor = true;
@@ -92,7 +95,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(599, 411);
+            this.label2.Location = new System.Drawing.Point(595, 409);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(170, 13);
             this.label2.TabIndex = 7;
@@ -114,9 +117,9 @@
             this.listViewDiffs.CheckBoxes = true;
             this.listViewDiffs.FullRowSelect = true;
             this.listViewDiffs.HideSelection = false;
-            this.listViewDiffs.Location = new System.Drawing.Point(184, 80);
+            this.listViewDiffs.Location = new System.Drawing.Point(184, 90);
             this.listViewDiffs.Name = "listViewDiffs";
-            this.listViewDiffs.Size = new System.Drawing.Size(585, 241);
+            this.listViewDiffs.Size = new System.Drawing.Size(580, 257);
             this.listViewDiffs.TabIndex = 9;
             this.listViewDiffs.UseCompatibleStateImageBehavior = false;
             this.listViewDiffs.View = System.Windows.Forms.View.Details;
@@ -126,9 +129,11 @@
             // 
             this.buttonExec.Enabled = false;
             this.buttonExec.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
-            this.buttonExec.Location = new System.Drawing.Point(184, 353);
+            this.buttonExec.Image = ((System.Drawing.Image)(resources.GetObject("buttonExec.Image")));
+            this.buttonExec.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.buttonExec.Location = new System.Drawing.Point(587, 53);
             this.buttonExec.Name = "buttonExec";
-            this.buttonExec.Size = new System.Drawing.Size(585, 23);
+            this.buttonExec.Size = new System.Drawing.Size(177, 31);
             this.buttonExec.TabIndex = 10;
             this.buttonExec.Text = "Download and Install";
             this.buttonExec.UseVisualStyleBackColor = true;
@@ -137,18 +142,29 @@
             // labelPercentage
             // 
             this.labelPercentage.AutoSize = true;
-            this.labelPercentage.Location = new System.Drawing.Point(740, 392);
+            this.labelPercentage.Location = new System.Drawing.Point(740, 383);
             this.labelPercentage.Name = "labelPercentage";
             this.labelPercentage.Size = new System.Drawing.Size(0, 13);
             this.labelPercentage.TabIndex = 12;
+            this.labelPercentage.Visible = false;
             // 
             // progressBarSkinDownload
             // 
-            this.progressBarSkinDownload.Location = new System.Drawing.Point(184, 382);
+            this.progressBarSkinDownload.Location = new System.Drawing.Point(184, 373);
             this.progressBarSkinDownload.Name = "progressBarSkinDownload";
             this.progressBarSkinDownload.Size = new System.Drawing.Size(550, 23);
             this.progressBarSkinDownload.Step = 1;
             this.progressBarSkinDownload.TabIndex = 11;
+            this.progressBarSkinDownload.Visible = false;
+            // 
+            // labelProgress
+            // 
+            this.labelProgress.AutoSize = true;
+            this.labelProgress.Location = new System.Drawing.Point(184, 399);
+            this.labelProgress.Name = "labelProgress";
+            this.labelProgress.Size = new System.Drawing.Size(0, 13);
+            this.labelProgress.TabIndex = 13;
+            this.labelProgress.Visible = false;
             // 
             // FormSkinDownloader
             // 
@@ -156,6 +172,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
             this.ClientSize = new System.Drawing.Size(777, 431);
+            this.Controls.Add(this.labelProgress);
             this.Controls.Add(this.labelPercentage);
             this.Controls.Add(this.progressBarSkinDownload);
             this.Controls.Add(this.buttonExec);
@@ -191,6 +208,7 @@
         private System.Windows.Forms.Button buttonExec;
         private System.Windows.Forms.Label labelPercentage;
         private System.Windows.Forms.ProgressBar progressBarSkinDownload;
+        private System.Windows.Forms.Label labelProgress;
     }
 }
 

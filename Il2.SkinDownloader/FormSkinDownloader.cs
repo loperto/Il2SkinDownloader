@@ -166,13 +166,19 @@ namespace Il2SkinDownloader
             else
                 progressBarSkinDownload.Value = progress.Percentage;
 
+            var readableProgress = $"{GetReadableSize(progress.Processed)}/{GetReadableSize(progress.Total)} ({GetReadableSize(progress.Remaining)} remaining)";
+            if (labelProgress.InvokeRequired)
+                labelProgress.BeginInvoke(new Action(() => labelProgress.Text = readableProgress));
+            else
+                labelProgress.Text = readableProgress;
+
             if (labelPercentage.InvokeRequired)
                 labelPercentage.BeginInvoke(new Action(() => labelPercentage.Text = $"{progress.Percentage}%"));
             else
                 labelPercentage.Text = $"{progress.Percentage}%";
 
 
-            var description = $"{progress.Description} {GetReadableSize(progress.Remaining)}";
+            var description = $"{progress.Description} ";
             if (label_Status.InvokeRequired)
                 label_Status.BeginInvoke(new Action(() => label_Status.Text = description));
             else
@@ -207,12 +213,16 @@ namespace Il2SkinDownloader
 
             labelPercentage.Visible = true;
             progressBarSkinDownload.Visible = true;
+            labelProgress.Visible = true;
 
             await _diffManager.ExecuteDiff(diffs, UpdateProgress);
             await GetDiff();
 
             labelPercentage.Visible = false;
+            labelProgress.Visible = false;
             progressBarSkinDownload.Visible = false;
         }
+
+        
     }
 }
