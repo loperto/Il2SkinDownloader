@@ -191,7 +191,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormSkinDownloader";
             this.Text = "Il2 Skin Downloader";
-            this.Load += new System.EventHandler(this.FormSkinDownloader_Load);
+           
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
