@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using IL2SkinDownloader.Core;
 using IL2SkinDownloader.Core.IL2;
+using Mandrega.Common;
+using Mandrega.Installer;
 using Newtonsoft.Json;
 
 namespace Il2SkinDownloader
@@ -224,6 +226,26 @@ namespace Il2SkinDownloader
             progressBarSkinDownload.Visible = false;
         }
 
+        private async void FormSkinDownloader_Load(object sender, EventArgs e)
+        {
+            label_Status.Text = "Downloading new version data. Please wait...";
 
+            listViewDiffs.Enabled = false;
+            textBox_Il2Path.Enabled = false;
+            buttonExec.Enabled = false;
+            buttonCheckUpdates.Enabled = false;
+            button_OpenIl2Folder.Enabled = false;
+
+            var configuration = StaticConfiguration.GetCurrentConfiguration();
+            await Installer.Install(configuration);
+
+            listViewDiffs.Enabled = true;
+            textBox_Il2Path.Enabled = true;
+            buttonExec.Enabled = true;
+            buttonCheckUpdates.Enabled = true;
+            button_OpenIl2Folder.Enabled = true;
+
+            label_Status.Text = string.Empty;
+        }
     }
 }

@@ -96,8 +96,10 @@
     <Compile Include="FormSkinDownloader.Designer.cs">
       <DependentUpon>FormSkinDownloader.cs</DependentUpon>
     </Compile>
+    <Compile Include="Installer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StaticConfiguration.cs" />
     <EmbeddedResource Include="FormSkinDownloader.resx">
       <DependentUpon>FormSkinDownloader.cs</DependentUpon>
     </EmbeddedResource>
