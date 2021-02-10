@@ -116,7 +116,7 @@ namespace Il2SkinDownloader
             label_Status.Text = "Checking for skin updates...";
 
             if (_diffManager == null)
-                _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
+                _diffManager = new DiffManager(new FtpSkinDrive(), _configuration.Il2Path);
 
             _diffs = (await _diffManager.GetDiffAsync()).OrderBy(x => x.GroupId).ToList();
             PopulateListView(_diffs);
