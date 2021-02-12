@@ -15,7 +15,7 @@ namespace Il2SkinDownloader
     {
         private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
-        private Configuration _configuration;
+        private readonly Configuration _configuration;
         private DiffManager _diffManager;
         private List<DiffInfo> _diffs;
 
@@ -112,7 +112,6 @@ namespace Il2SkinDownloader
 
         private async Task GetDiff()
         {
-
             label_Status.Text = "Checking for skin updates...";
 
             if (_diffManager == null)
@@ -224,6 +223,20 @@ namespace Il2SkinDownloader
             progressBarSkinDownload.Visible = false;
         }
 
+        private void buttonSelectAll_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewDiffs.Items)
+            {
+                item.Checked = true;
+            }
+        }
 
+        private void buttonUneselectAll_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewDiffs.Items)
+            {
+                item.Checked = false;
+            }
+        }
     }
 }

@@ -12,10 +12,16 @@ namespace IL2SkinDownloader.Core
     public class FtpSkinDrive : IRemoteSkinDrive
     {
         private FtpClient _client;
-        private Dictionary<string, IEnumerable<FileLocation>> _cache = null;
+        private Dictionary<string, IEnumerable<FileLocation>> _filesCache = null;
+        private IReadOnlyList<RemoteDirectory> _directoriesCache;
+
         public Task Connect()
         {
-            _client = new FtpClient("ftp://79.9.2.47", new NetworkCredential("skindownloader", "G3m1n1_ftp"));
+            _client = new FtpClient("ftp://79.9.2.47", new NetworkCredential("skindownloader", "G3m1n1_ftp"))
+            {
+                BulkListing = true,
+                TimeZone = 1,
+            };
             return _client.ConnectAsync();
         }
 
@@ -47,26 +53,41 @@ namespace IL2SkinDownloader.Core
 
         public async Task<IEnumerable<RemoteDirectory>> GetDirectoriesAsync()
         {
+            if (_directoriesCache == null)
+            {
+                await RefreshLocalCacheAsync();
+            }
+
+            return _directoriesCache;
+        }
+
+        private async Task RefreshLocalCacheAsync()
+        {
             var list = await _client.GetListingAsync("/skindownloader", FtpListOption.Recursive);
-            _cache ??= list.Where(x => x.Type == FtpFileSystemObjectType.File)
+
+            _filesCache ??= list.Where(x => x.Type == FtpFileSystemObjectType.File)
                 .GroupBy(GetParentPath)
                 .Select(group => new { Dir = @group.Key, Files = @group.Select(Convert) })
                 .ToDictionary(x => x.Dir, x => x.Files);
 
-            return list
+            _directoriesCache ??= list
                 .Where(x => x.Type == FtpFileSystemObjectType.Directory)
                 .Select(x => new RemoteDirectory
                 {
                     Name = x.Name,
                     Id = x.FullName,
-                });
+                }).ToList();
         }
 
-        public Task<IEnumerable<FileLocation>> GetDirectoryFilesAsync(string directoryName)
+        public async Task<IEnumerable<FileLocation>> GetDirectoryFilesAsync(string directoryName)
         {
-            if (_cache.TryGetValue(directoryName, out var fromDictionary))
-                return Task.FromResult(fromDictionary);
-            return Task.FromResult(Enumerable.Empty<FileLocation>());
+            if (_filesCache == null)
+            {
+                await RefreshLocalCacheAsync();
+            }
+            if (_filesCache.TryGetValue(directoryName, out var fromDictionary))
+                return fromDictionary;
+            return Enumerable.Empty<FileLocation>();
         }
 
         public class FtpDownloadProgress : IProgress<FtpProgress>
