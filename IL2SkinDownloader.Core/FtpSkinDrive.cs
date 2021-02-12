@@ -107,7 +107,7 @@ namespace IL2SkinDownloader.Core
         public Task DownloadFileAsync(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null)
         {
             var progress = onProgress != null ? new FtpDownloadProgress(onProgress) : null;
-            return _client.DownloadAsync(fileLocation.Path, 0, progress, CancellationToken.None);
+            return _client.DownloadFileAsync(downloadPath, fileLocation.Path, FtpLocalExists.Overwrite, FtpVerify.None, progress, CancellationToken.None);
         }
     }
 }
