@@ -15,7 +15,6 @@ namespace IL2SkinDownloader.Core
         {
             _remoteSkinDrive = remoteSkinDrive;
             _il2InstallPath = il2InstallPath;
-            remoteSkinDrive.Connect();
         }
         private FileLocation Convert(FileInfo localFile)
         {
@@ -86,6 +85,8 @@ namespace IL2SkinDownloader.Core
         {
             //var configuration = StaticConfiguration.GetCurrentConfiguration();
             //Installer.Install(configuration);
+
+            await _remoteSkinDrive.Connect();
             var il2LocalSkinsRootPath = IL2Helpers.SkinDirectoryPath(_il2InstallPath);
             var remoteFolders = (await _remoteSkinDrive.GetDirectoriesAsync()).ToArray();
 

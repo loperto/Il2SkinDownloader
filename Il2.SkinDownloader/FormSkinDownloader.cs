@@ -15,9 +15,11 @@ namespace Il2SkinDownloader
 {
     public partial class FormSkinDownloader : Form
     {
-        private readonly string _folderSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
+        private readonly string _folderSettingsPath =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "IL2SkinDownloader");
+
         private string SettingsFileName => Path.Combine(_folderSettingsPath, "settings.json");
-        private Configuration _configuration;
+        private readonly Configuration _configuration;
         private DiffManager _diffManager;
         private List<DiffInfo> _diffs;
 
@@ -29,11 +31,11 @@ namespace Il2SkinDownloader
 
             listViewDiffs.Columns.AddRange(new[]
             {
-                new ColumnHeader {Name = "FileName",Text = "Plane",Width = 0},
-                new ColumnHeader {Name = "Status",Text = "Status",Width = 0},
-                new ColumnHeader {Name = "Size",Text = "Size",Width = 0},
-                new ColumnHeader {Name = "Last Update",Text = "Last Update",Width = 0},
-                new ColumnHeader {Name = "Current",Text = "Current",Width = 0},
+                new ColumnHeader {Name = "FileName", Text = "Plane", Width = 0},
+                new ColumnHeader {Name = "Status", Text = "Status", Width = 0},
+                new ColumnHeader {Name = "Size", Text = "Size", Width = 0},
+                new ColumnHeader {Name = "Last Update", Text = "Last Update", Width = 0},
+                new ColumnHeader {Name = "Current", Text = "Current", Width = 0},
             });
 
             var imageList = new ImageList { ImageSize = new Size(20, 20) };
@@ -72,6 +74,7 @@ namespace Il2SkinDownloader
 
             File.WriteAllText(SettingsFileName, configurationString);
         }
+
         private void Button_OpenIl2Folder_Click(object sender, EventArgs e)
         {
             var openFolderDialog = new FolderBrowserDialog
@@ -114,11 +117,10 @@ namespace Il2SkinDownloader
 
         private async Task GetDiff()
         {
-
             label_Status.Text = "Checking for skin updates...";
 
             if (_diffManager == null)
-                _diffManager = new DiffManager(new GoogleDriveSkinDrive(), _configuration.Il2Path);
+                _diffManager = new DiffManager(new FtpSkinDrive(), _configuration.Il2Path);
 
             _diffs = (await _diffManager.GetDiffAsync()).OrderBy(x => x.GroupId).ToList();
             PopulateListView(_diffs);
@@ -135,19 +137,19 @@ namespace Il2SkinDownloader
                 .ToDictionary(x => x.Header);
 
             var items = diffs.Select((i, index) =>
-              {
-                  var item = new ListViewItem(i.Remote.Name) { ImageKey = i.Status.ToString(), Tag = index };
-                  if (groups.TryGetValue(i.GroupId, out var group))
-                  {
-                      item.Group = @group;
-                  }
+            {
+                var item = new ListViewItem(i.Remote.Name) { ImageKey = i.Status.ToString(), Tag = index };
+                if (groups.TryGetValue(i.GroupId, out var group))
+                {
+                    item.Group = @group;
+                }
 
-                  item.SubItems.Add(i.Status.ToString());
-                  item.SubItems.Add(GetReadableSize(i.Remote.Size));
-                  item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
-                  item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
-                  return item;
-              }).ToArray();
+                item.SubItems.Add(i.Status.ToString());
+                item.SubItems.Add(GetReadableSize(i.Remote.Size));
+                item.SubItems.Add(i.Remote?.LastUpdate.ToString("g") ?? "-");
+                item.SubItems.Add(i.Local?.LastUpdate.ToString("g") ?? "-");
+                return item;
+            }).ToArray();
 
             listViewDiffs.Groups.AddRange(groups.Values.ToArray());
             listViewDiffs.Items.AddRange(items);
@@ -165,11 +167,13 @@ namespace Il2SkinDownloader
         public void UpdateProgress(ProgressStatus progress)
         {
             if (progressBarSkinDownload.InvokeRequired)
-                progressBarSkinDownload.BeginInvoke(new Action(() => progressBarSkinDownload.Value = progress.Percentage));
+                progressBarSkinDownload.BeginInvoke(
+                    new Action(() => progressBarSkinDownload.Value = progress.Percentage));
             else
                 progressBarSkinDownload.Value = progress.Percentage;
 
-            var readableProgress = $"{GetReadableSize(progress.Processed)}/{GetReadableSize(progress.Total)} ({GetReadableSize(progress.Remaining)} remaining)";
+            var readableProgress =
+                $"{GetReadableSize(progress.Processed)}/{GetReadableSize(progress.Total)} ({GetReadableSize(progress.Remaining)} remaining)";
             if (labelProgress.InvokeRequired)
                 labelProgress.BeginInvoke(new Action(() => labelProgress.Text = readableProgress));
             else
@@ -201,6 +205,7 @@ namespace Il2SkinDownloader
 
             return $"{bytes:0.##} {sizes[order]}";
         }
+
         private async void buttonExec_Click(object sender, EventArgs e)
         {
             if (!_diffs.Any() || listViewDiffs.CheckedItems.Count == 0)
@@ -210,9 +215,9 @@ namespace Il2SkinDownloader
             }
 
             var diffs = listViewDiffs.CheckedItems
-                  .OfType<ListViewItem>()
-                  .Select(x => _diffs[(int)x.Tag])
-                  .ToList();
+                .OfType<ListViewItem>()
+                .Select(x => _diffs[(int)x.Tag])
+                .ToList();
 
             labelPercentage.Visible = true;
             progressBarSkinDownload.Visible = true;
@@ -246,6 +251,22 @@ namespace Il2SkinDownloader
             button_OpenIl2Folder.Enabled = true;
 
             label_Status.Text = string.Empty;
+        }
+
+        private void buttonSelectAll_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewDiffs.Items)
+            {
+                item.Checked = true;
+            }
+        }
+
+        private void buttonUneselectAll_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listViewDiffs.Items)
+            {
+                item.Checked = false;
+            }
         }
     }
 }

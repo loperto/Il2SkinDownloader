@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,12 +28,38 @@ namespace IL2SkinDownloader.Tests
         }
 
         [Test]
-        public async Task TestDiff()
+        public async Task TestDiffGoogleDrive()
         {
             var googleDriveSkinDrive = new GoogleDriveSkinDrive();
-            var diffManager = new DiffManager(googleDriveSkinDrive, "C:\\Temp\\IL-2 Sturmovik Great Battles");
+            var diffManager = new DiffManager(googleDriveSkinDrive, @"G:\Steam\steamapps\common\IL-2 Sturmovik Battle of Stalingrad");
             var diffs = await diffManager.GetDiffAsync();
             await diffManager.ExecuteDiff(diffs);
         }
+
+        [Test]
+        public async Task TestDiffFtp()
+        {
+            var skinDrive = new FtpSkinDrive();
+            var diffManager = new DiffManager(skinDrive, @"G:\Steam\steamapps\common\IL-2 Sturmovik Battle of Stalingrad");
+            var diffs = await diffManager.GetDiffAsync();
+            await diffManager.ExecuteDiff(diffs);
+        }
+
+
+        [Test]
+        public async Task FolderFromUri()
+        {
+            var result = "/";
+            var filePath = "/skindownloader/Yak7Bs36/Yak-7B Eux 86.dds";
+            var lastIndex = filePath.LastIndexOf("/", StringComparison.InvariantCultureIgnoreCase);
+            if (lastIndex != -1)
+            {
+                result = filePath.Substring(0,lastIndex);
+            }
+
+            Console.WriteLine(result);
+        }
+
+
     }
 }
