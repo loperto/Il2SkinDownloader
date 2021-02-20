@@ -18,7 +18,75 @@ namespace IL2SkinDownloader.Tests
         }
 
         [Test]
-        public async Task GoogleDriveConnection()
+        public async Task UploadAllFromLocal()
+        {
+            var geminiSquadrigliaService = new GoogleDriveWrapper();
+            await geminiSquadrigliaService.Connect("558704167850-uf9fbin4vmlfdom7qjomiqrf14u4t1cc.apps.googleusercontent.com", "c04c8g7cV_qHr1oACg74aD3Z", "skinDownloader", CancellationToken.None);
+            var remoteFiles = await geminiSquadrigliaService.GetFilesAsync(CancellationToken.None);
+            var files = remoteFiles.Where(x => x.Name.EndsWith(".dds")).ToDictionary(x => x.Name);
+            var remoteFolders = await geminiSquadrigliaService.GetFoldersAsync();
+            var folders = remoteFolders.ToDictionary(x => x.Name);
+
+            foreach (var directory in Directory.EnumerateDirectories(@"G:\Steam\steamapps\common\IL-2 Sturmovik Battle of Stalingrad\data\graphics\skins"))
+            {
+                var directoryInfo = new DirectoryInfo(directory);
+                if (!folders.TryGetValue(directoryInfo.Name, out var remoteFolder))
+                {
+                    remoteFolder = await geminiSquadrigliaService.CreateFolderAsync(directoryInfo.Name, "1039aymF0KRTIrzx2cNF9dbYmb6XmP9w5");
+                    folders.Add(remoteFolder.Name, remoteFolder);
+                }
+
+                foreach (var filePath in Directory.EnumerateFiles(directory))
+                {
+                    var fileInfo = new FileInfo(filePath);
+                    if (!files.TryGetValue(fileInfo.Name, out var remoteFile))
+                    {
+                        Console.WriteLine($"Uploading {filePath}");
+                        remoteFile = await geminiSquadrigliaService.UploadAsync(filePath, remoteFolder.Id);
+                        files.Add(remoteFile.Name, remoteFile);
+                        Console.WriteLine($"Upload completed {filePath}");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public async Task ConnectWithGeminiSquadriglia()
+        {
+            var geminiSquadrigliaService = new GoogleDriveWrapper();
+            await geminiSquadrigliaService.Connect("558704167850-uf9fbin4vmlfdom7qjomiqrf14u4t1cc.apps.googleusercontent.com", "c04c8g7cV_qHr1oACg74aD3Z", "skinDownloader", CancellationToken.None);
+            var files = await geminiSquadrigliaService.GetFilesAsync(CancellationToken.None);
+            foreach (var googleDriveItem in files)
+            {
+                Console.WriteLine($"{googleDriveItem.Id} {googleDriveItem.Name}");
+            }
+        }
+
+        [Test]
+        public async Task GoogleDriveGetAllFiles()
+        {
+            var googleDrive = new GoogleDriveWrapper();
+
+            googleDrive.Connect("auth.json", "skinDownloader");
+            var files = await googleDrive.GetFoldersAsync();
+
+            foreach (var googleDriveItem in files)
+            {
+                await googleDrive.DeleteAsync(googleDriveItem.Id);
+                Console.WriteLine(googleDriveItem);
+            }
+        }
+
+        [Test]
+        public async Task GoogleDriveInfos()
+        {
+            var googleDrive = new GoogleDriveWrapper();
+            googleDrive.Connect("auth.json", "skinDownloader");
+            await googleDrive.GetInfos();
+        }
+
+        [Test]
+        public async Task ConnectWithServiceAccount()
         {
             var googleDrive = new GoogleDriveWrapper();
             googleDrive.Connect("auth.json", "skinDownloader");
@@ -54,7 +122,7 @@ namespace IL2SkinDownloader.Tests
             var lastIndex = filePath.LastIndexOf("/", StringComparison.InvariantCultureIgnoreCase);
             if (lastIndex != -1)
             {
-                result = filePath.Substring(0,lastIndex);
+                result = filePath.Substring(0, lastIndex);
             }
 
             Console.WriteLine(result);
