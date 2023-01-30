@@ -17,12 +17,9 @@ namespace IL2SkinDownloader.Core
 
         public Task Connect()
         {
-            _client = new FtpClient("ftp://79.9.2.47", new NetworkCredential("skindownloader", "G3m1n1_ftp"))
-            {
-                BulkListing = true,
-                TimeZone = 1,
-            };
-            return _client.ConnectAsync();
+            _client = new FtpClient("ftp://79.9.2.47", "skindownloader", "G3m1n1_ftp");
+            _client.Connect();
+            return Task.CompletedTask;
         }
 
         private FileLocation Convert(FtpListItem file)
@@ -51,63 +48,51 @@ namespace IL2SkinDownloader.Core
             return result;
         }
 
-        public async Task<IEnumerable<RemoteDirectory>> GetDirectoriesAsync()
+        public async Task<IEnumerable<RemoteDirectory>> GetDirectories()
         {
             if (_directoriesCache == null)
             {
-                await RefreshLocalCacheAsync();
+                await RefreshLocalCache();
             }
 
             return _directoriesCache;
         }
 
-        private async Task RefreshLocalCacheAsync()
+        private Task RefreshLocalCache()
         {
-            var list = await _client.GetListingAsync("/skindownloader", FtpListOption.Recursive);
+            var list = _client.GetListing("/skindownloader", FtpListOption.Recursive);
 
-            _filesCache ??= list.Where(x => x.Type == FtpFileSystemObjectType.File)
+            _filesCache ??= list.Where(x => x.Type == FtpObjectType.File)
                 .GroupBy(GetParentPath)
                 .Select(group => new { Dir = @group.Key, Files = @group.Select(Convert) })
                 .ToDictionary(x => x.Dir, x => x.Files);
 
             _directoriesCache ??= list
-                .Where(x => x.Type == FtpFileSystemObjectType.Directory)
+                .Where(x => x.Type == FtpObjectType.Directory)
                 .Select(x => new RemoteDirectory
                 {
                     Name = x.Name,
                     Id = x.FullName,
                 }).ToList();
+
+            return Task.CompletedTask;
         }
 
-        public async Task<IEnumerable<FileLocation>> GetDirectoryFilesAsync(string directoryName)
+        public async Task<IEnumerable<FileLocation>> GetDirectoryFiles(string directoryName)
         {
             if (_filesCache == null)
             {
-                await RefreshLocalCacheAsync();
+                await RefreshLocalCache();
             }
             if (_filesCache.TryGetValue(directoryName, out var fromDictionary))
                 return fromDictionary;
             return Enumerable.Empty<FileLocation>();
         }
 
-        public class FtpDownloadProgress : IProgress<FtpProgress>
+        public Task DownloadFile(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null)
         {
-            private readonly Action<long> _onProgress;
-
-            public FtpDownloadProgress(Action<long> onProgress)
-            {
-                _onProgress = onProgress;
-            }
-            public void Report(FtpProgress value)
-            {
-                _onProgress.Invoke(value.TransferredBytes);
-            }
-        }
-
-        public Task DownloadFileAsync(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null)
-        {
-            var progress = onProgress != null ? new FtpDownloadProgress(onProgress) : null;
-            return _client.DownloadFileAsync(downloadPath, fileLocation.Path, FtpLocalExists.Overwrite, FtpVerify.None, progress, CancellationToken.None);
+            _client.DownloadFile(downloadPath, fileLocation.Path, FtpLocalExists.Overwrite, FtpVerify.None, f => onProgress?.Invoke(f.TransferredBytes));
+            return Task.CompletedTask;
         }
     }
 }

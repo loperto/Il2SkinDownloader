@@ -52,7 +52,7 @@ namespace IL2SkinDownloader.Core
                     case Status.Added:
                         if (!Directory.Exists(diff.LocalDestination))
                             Directory.CreateDirectory(diff.LocalDestination);
-                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, Path.Combine(diff.LocalDestination, diff.Remote.Name),
+                        await _remoteSkinDrive.DownloadFile(diff.Remote, Path.Combine(diff.LocalDestination, diff.Remote.Name),
                             bytes =>
                             {
                                 currentFileDownloaded = bytes;
@@ -62,7 +62,7 @@ namespace IL2SkinDownloader.Core
                         break;
                     case Status.Updated:
                         File.Delete(diff.Local.Path);
-                        await _remoteSkinDrive.DownloadFileAsync(diff.Remote, diff.Local.Path, bytes =>
+                        await _remoteSkinDrive. DownloadFile(diff.Remote, diff.Local.Path, bytes =>
                         {
                             currentFileDownloaded = bytes;
                             var progress = ProgressStatus.Create(totalSize, currentFileDownloaded + downloaded, $"Downloading {diff.Remote.Name}");
@@ -88,13 +88,13 @@ namespace IL2SkinDownloader.Core
 
             await _remoteSkinDrive.Connect();
             var il2LocalSkinsRootPath = IL2Helpers.SkinDirectoryPath(_il2InstallPath);
-            var remoteFolders = (await _remoteSkinDrive.GetDirectoriesAsync()).ToArray();
+            var remoteFolders = (await _remoteSkinDrive.GetDirectories()).ToArray();
 
             var result = new List<DiffInfo>();
             foreach (var remoteFolder in remoteFolders)
             {
                 var localFolderPath = Path.Combine(il2LocalSkinsRootPath, remoteFolder.Name);
-                var remoteFileForFolder = (await _remoteSkinDrive.GetDirectoryFilesAsync(remoteFolder.Id)).ToArray();
+                var remoteFileForFolder = (await _remoteSkinDrive.GetDirectoryFiles(remoteFolder.Id)).ToArray();
                 var localFilesForFolder = GetLocalFiles(localFolderPath).ToArray();
 
                 foreach (var remoteFile in remoteFileForFolder)
