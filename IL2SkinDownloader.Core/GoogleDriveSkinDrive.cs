@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentFTP;
 using IL2SkinDownloader.Core.GoogleDrive;
 
 namespace IL2SkinDownloader.Core
@@ -36,13 +37,13 @@ namespace IL2SkinDownloader.Core
             return Task.CompletedTask;
         }
 
-        public async Task<IEnumerable<RemoteDirectory>> GetDirectoriesAsync()
+        public async Task<IEnumerable<RemoteDirectory>> GetDirectories()
         {
             var directories = await _googleDriveWrapper.GetFoldersAsync();
             return directories.Select(x => new RemoteDirectory { Id = x.Id, Name = x.Name });
         }
 
-        public async Task<IEnumerable<FileLocation>> GetDirectoryFilesAsync(string directoryName)
+        public async Task<IEnumerable<FileLocation>> GetDirectoryFiles(string directoryName)
         {
             if (_forDirectoryCache == null)
             {
@@ -57,7 +58,7 @@ namespace IL2SkinDownloader.Core
             return Enumerable.Empty<FileLocation>();
         }
 
-        public Task DownloadFileAsync(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null)
+        public Task DownloadFile(FileLocation fileLocation, string downloadPath, Action<long> onProgress = null)
         {
             return _googleDriveWrapper.DownloadAsync(fileLocation.Id, downloadPath, onProgress, () => onProgress?.Invoke(fileLocation.Size));
         }
